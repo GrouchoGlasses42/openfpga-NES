@@ -316,6 +316,7 @@ module core_top (
   end
 
   always @(posedge clk_74a) begin
+    if (fds_eject_ticks != 0) fds_eject_ticks <= fds_eject_ticks - 1'b1;
     if (reset_delay > 0) begin
       reset_delay <= reset_delay - 1;
     end
@@ -343,6 +344,9 @@ module core_top (
         32'h210: begin
           square_pixels <= bridge_wr_data[0];
         end
+        32'h214: begin
+          composite_blend_mode <= bridge_wr_data[3:0];
+        end
         32'h300: begin
           multitap_enabled <= bridge_wr_data[0];
         end
@@ -358,6 +362,9 @@ module core_top (
         32'h310: begin
           turbo_speed <= bridge_wr_data[2:0];
         end
+        32'h320: fds_eject_ticks <= 24'hffffff;
+        32'h324: fds_manual_swap <= bridge_wr_data[0];
+        32'h328: fds_fast_load <= bridge_wr_data[0];
       endcase
     end
   end
@@ -376,20 +383,22 @@ module core_top (
 
   wire dataslot_requestread;
   wire [15:0] dataslot_requestread_id;
-  wire dataslot_requestread_ack = 1;
+  wire dataslot_requestread_ack;
   wire dataslot_requestread_ok = 1;
 
   wire dataslot_requestwrite;
   wire [15:0] dataslot_requestwrite_id;
-  wire dataslot_requestwrite_ack = 1;
+  wire dataslot_requestwrite_ack;
   wire dataslot_requestwrite_ok = 1;
 
   wire dataslot_allcomplete;
 
   // TODO: Use mapper_has_savestate (and sync it)
-  wire savestate_supported = 1;
+  wire mapper_state_capable_s;
+  synch_3 #(.WIDTH(1)) state_capability_s (.i(mapper_has_savestate), .o(mapper_state_capable_s), .clk(clk_74a), .rise(), .fall());
+  wire savestate_supported = mapper_state_capable_s;
   wire [31:0] savestate_addr = 32'h40000000;
-  wire [31:0] savestate_size = 32'h144008;
+  wire [31:0] savestate_size = 32'h143308;
   // Add buffer of 0x1000 for extra data that we'll just discard on loading
   wire [31:0] savestate_maxloadsize = savestate_size + 32'h1000;
 
@@ -464,11 +473,22 @@ module core_top (
   wire [31:0] datatable_q;
 
   reg is_downloading = 0;
+  wire save_transfer_s, save_loading_s, save_memory_ready;
+  save_transfer_controller persistent_transfer (
+      .clk_74a(clk_74a), .clk_ppu_21_47(clk_ppu_21_47),
+      .clock_locked(pll_core_locked),
+      .requestread(dataslot_requestread), .requestread_id(dataslot_requestread_id),
+      .requestwrite(dataslot_requestwrite), .requestwrite_id(dataslot_requestwrite_id),
+      .requestread_ack(dataslot_requestread_ack), .requestwrite_ack(dataslot_requestwrite_ack),
+      .allcomplete(dataslot_allcomplete), .memory_ready(save_memory_ready),
+      .active(save_transfer_s), .loading(save_loading_s)
+  );
 
   wire ioctl_download = is_downloading && dataslot_requestwrite_id == 0;
   wire palette_download = is_downloading && dataslot_requestwrite_id == 11;
 
   wire has_save;
+  wire [31:0] save_size;
 
   always @(posedge clk_74a) begin
     if (dataslot_requestwrite) is_downloading <= 1;
@@ -483,7 +503,7 @@ module core_top (
     end else begin
       // Write sram size
       datatable_wren <= 1;
-      datatable_data <= has_save ? 32'h40_000 : 32'h0;
+      datatable_data <= has_save ? save_size : 32'h0;
       // Data slot index 1, not id 1
       datatable_addr <= 1 * 2 + 1;
     end
@@ -515,21 +535,21 @@ module core_top (
   wire sd_buff_wr;
   wire sd_buff_rd;
 
-  wire [17:0] sd_buff_addr_in;
-  wire [17:0] sd_buff_addr_out;
+  wire [18:0] sd_buff_addr_in;
+  wire [18:0] sd_buff_addr_out;
 
-  wire [17:0] sd_buff_addr = sd_buff_wr ? sd_buff_addr_in : sd_buff_addr_out;
+  wire [18:0] sd_buff_addr = sd_buff_wr ? sd_buff_addr_in : sd_buff_addr_out;
 
   wire [7:0] sd_buff_din;
   wire [7:0] sd_buff_dout;
 
   data_unloader #(
       .ADDRESS_MASK_UPPER_4(4'h2),
-      .ADDRESS_SIZE(18),
-      .READ_MEM_CLOCK_DELAY(7)
+      .ADDRESS_SIZE(19),
+      .READ_MEM_CLOCK_DELAY(14)
   ) save_data_unloader (
       .clk_74a(clk_74a),
-      .clk_memory(clk_ppu_21_47),
+      .clk_memory(clk_85_9),
 
       .bridge_rd(bridge_rd),
       .bridge_endian_little(bridge_endian_little),
@@ -543,12 +563,12 @@ module core_top (
 
   data_loader #(
       .ADDRESS_MASK_UPPER_4(4'h2),
-      .ADDRESS_SIZE(18),
-      .WRITE_MEM_CLOCK_DELAY(7),
-      .WRITE_MEM_EN_CYCLE_LENGTH(3)
+      .ADDRESS_SIZE(19),
+      .WRITE_MEM_CLOCK_DELAY(16),
+      .WRITE_MEM_EN_CYCLE_LENGTH(8)
   ) save_data_loader (
       .clk_74a(clk_74a),
-      .clk_memory(clk_ppu_21_47),
+      .clk_memory(clk_85_9),
 
       .bridge_wr(bridge_wr),
       .bridge_endian_little(bridge_endian_little),
@@ -573,6 +593,7 @@ module core_top (
 
   wire ss_save;
   wire ss_load;
+  wire ss_load_done;
 
   wire mapper_has_savestate;
   wire [31:0] save_state_bridge_read_data;
@@ -615,7 +636,8 @@ module core_top (
       .ss_be  (ss_be),
       .ss_ack (ss_ack),
 
-      .ss_busy(ss_busy)
+      .ss_busy(ss_busy),
+      .ss_load_done(ss_load_done)
   );
 
   // Core
@@ -672,10 +694,19 @@ module core_top (
   reg hide_overscan = 0;
   reg [1:0] mask_vid_edges = 0;
   reg square_pixels = 0;
+  reg [3:0] composite_blend_mode = 0;
   reg allow_extra_sprites = 0;
   reg [2:0] selected_palette = 0;
   wire external_reset = reset_delay > 0;
 
+  reg [23:0] fds_eject_ticks = 0;
+  reg fds_manual_swap = 0;
+  reg fds_fast_load = 0;
+  wire [2:0] fds_controls;
+  synch_3 #(.WIDTH(3)) fds_settings_s (
+      .i({(fds_eject_ticks != 0), ~fds_manual_swap, fds_fast_load}),
+      .o(fds_controls), .clk(clk_ppu_21_47), .rise(), .fall()
+  );
   reg multitap_enabled = 0;
   reg lightgun_enabled = 0;
   reg [7:0] lightgun_dpad_aim_speed = 0;
@@ -815,6 +846,12 @@ module core_top (
 
       .turbo_speed(turbo_speed_s),
       .swap_controllers(swap_controllers_s),
+      .fds_eject_button(fds_controls[2] | cont1_key_s[8]),
+      .fds_auto_swap(fds_controls[1]),
+      .fds_fast_load(fds_controls[0]),
+      .save_transfer_active(save_transfer_s),
+      .save_transfer_loading(save_loading_s),
+      .save_memory_ready(save_memory_ready),
 
       // APF
       .ioctl_wr(ioctl_wr),
@@ -827,6 +864,7 @@ module core_top (
 
       // Save data
       .has_save(has_save),
+      .save_size(save_size),
       .sd_buff_wr(sd_buff_wr),
       .sd_buff_rd(sd_buff_rd),
       .sd_buff_addr(sd_buff_addr),
@@ -837,6 +875,7 @@ module core_top (
       .mapper_has_savestate(mapper_has_savestate),
       .ss_save(ss_save),
       .ss_load(ss_load),
+      .ss_load_done(ss_load_done),
 
       .ss_busy(ss_busy),
 
@@ -879,6 +918,38 @@ module core_top (
   wire video_vs_nes;
   wire [23:0] video_rgb_nes;
 
+  // All nine modes delay RGB, blanking and sync together before Pocket metadata.
+  // Filter from snckrz/openfpga-NES-Analogizer v0.2.0-rc.2 (5afb6390).
+  wire [3:0] composite_blend_video;
+  synch_3 #(.WIDTH(4)) composite_settings_s (
+      .i(composite_blend_mode), .o(composite_blend_video),
+      .clk(clk_video_5_37), .rise(), .fall()
+  );
+  wire [23:0] video_rgb_composite_raw;
+  wire filtered_hblank_raw, filtered_vblank_raw, filtered_hsync_raw, filtered_vsync_raw;
+  reg [23:0] video_rgb_composite = 24'h000000;
+  reg filtered_hblank = 1'b1;
+  reg filtered_vblank = 1'b1;
+  reg filtered_hsync = 1'b0;
+  reg filtered_vsync = 1'b0;
+  // Register the PAL line-buffer output and all timing signals together.
+  always @(posedge clk_video_5_37) begin
+    video_rgb_composite <= video_rgb_composite_raw;
+    filtered_hblank <= filtered_hblank_raw;
+    filtered_vblank <= filtered_vblank_raw;
+    filtered_hsync <= filtered_hsync_raw;
+    filtered_vsync <= filtered_vsync_raw;
+  end
+  composite_blend pocket_composite_blend (
+      .clk(clk_video_5_37), .mode(composite_blend_video),
+      .hblank_in(h_blank), .vblank_in(v_blank),
+      .hsync_in(video_hs_nes), .vsync_in(video_vs_nes),
+      .dotclk_in(1'b0), .interlace_in(1'b0), .rgb_in(video_rgb_nes),
+      .rgb_out(video_rgb_composite_raw),
+      .hblank_out(filtered_hblank_raw), .vblank_out(filtered_vblank_raw),
+      .hsync_out(filtered_hsync_raw), .vsync_out(filtered_vsync_raw), .dotclk_out()
+  );
+
   reg video_de_reg;
   reg video_hs_reg;
   reg video_vs_reg;
@@ -890,13 +961,14 @@ module core_top (
   assign video_hs = video_hs_reg;
   assign video_vs = video_vs_reg;
   assign video_rgb = video_rgb_reg;
+  assign video_skip = 1'b0;
 
   reg hs_prev;
   reg [2:0] hs_delay;
   reg vs_prev;
   reg de_prev;
 
-  wire de = ~(h_blank || v_blank);
+  wire de = ~(filtered_hblank || filtered_vblank);
   wire [23:0] video_slot_rgb = {9'b0, hide_overscan_with_region, square_pixels_s, 10'b0, 3'b0};
 
   always @(posedge clk_video_5_37) begin
@@ -907,7 +979,7 @@ module core_top (
     if (de) begin
       video_de_reg  <= 1;
 
-      video_rgb_reg <= video_rgb_nes;
+      video_rgb_reg <= video_rgb_composite;
     end else if (de_prev && ~de) begin
       video_rgb_reg <= video_slot_rgb;
     end
@@ -920,15 +992,15 @@ module core_top (
       video_hs_reg <= 1;
     end
 
-    if (~hs_prev && video_hs_nes) begin
+    if (~hs_prev && filtered_hsync) begin
       // HSync went high. Delay by 3 cycles to prevent overlapping with VSync
       hs_delay <= 7;
     end
 
     // Set VSync to be high for a single cycle on the rising edge of the VSync coming out of the core
-    video_vs_reg <= ~vs_prev && video_vs_nes;
-    hs_prev <= video_hs_nes;
-    vs_prev <= video_vs_nes;
+    video_vs_reg <= ~vs_prev && filtered_vsync;
+    hs_prev <= filtered_hsync;
+    vs_prev <= filtered_vsync;
     de_prev <= de;
   end
 

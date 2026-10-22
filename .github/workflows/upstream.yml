@@ -1,9 +1,6 @@
 name: Sync Upstream
 on:
   workflow_dispatch:
-  schedule:
-    # Run at midnight UTC daily
-    - cron: "0 0 * * *"
 
 jobs:
   pr-upstream:

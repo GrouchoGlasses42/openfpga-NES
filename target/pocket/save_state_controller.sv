@@ -36,7 +36,8 @@ module save_state_controller (
     input wire [7:0] ss_be,
     output reg ss_ack,
 
-    input wire ss_busy
+    input wire ss_busy,
+    input wire ss_load_done
 );
   wire savestate_load_s;
   wire savestate_start_s;
@@ -139,6 +140,7 @@ module save_state_controller (
 
   wire fifo_save_rd_empty;
   wire fifo_save_wr_empty;
+  wire fifo_save_wr_full;
 
   dcfifo_mixed_widths fifo_save (
       .data(ss_din),
@@ -154,6 +156,7 @@ module save_state_controller (
       }),
       .rdempty(fifo_save_rd_empty),
       .wrempty(fifo_save_wr_empty),
+      .wrfull(fifo_save_wr_full),
       .aclr(1'b0)
       // .eccstatus(),
       // .rdfull(),
@@ -161,9 +164,9 @@ module save_state_controller (
       // .wrfull(),
       // .wrusedw()
   );
-  defparam fifo_save.intended_device_family = "Cyclone V", fifo_save.lpm_numwords = 4,
+  defparam fifo_save.intended_device_family = "Cyclone V", fifo_save.lpm_numwords = 16,
       fifo_save.lpm_showahead = "OFF", fifo_save.lpm_type = "dcfifo_mixed_widths",
-      fifo_save.lpm_width = 64, fifo_save.lpm_widthu = 2, fifo_save.lpm_widthu_r = 3,
+      fifo_save.lpm_width = 64, fifo_save.lpm_widthu = 4, fifo_save.lpm_widthu_r = 5,
       fifo_save.lpm_width_r = 32, fifo_save.overflow_checking = "ON",
       fifo_save.rdsync_delaypipe = 5, fifo_save.underflow_checking = "ON", fifo_save.use_eab = "ON",
       fifo_save.wrsync_delaypipe = 5;
@@ -227,6 +230,8 @@ module save_state_controller (
 
   reg did_req = 0;
   reg is_dup_read = 0;
+  reg pending_save_word = 0;
+  reg load_succeeded = 0;
 
   reg prev_savestate_start = 0;
   reg prev_savestate_load = 0;
@@ -249,6 +254,7 @@ module save_state_controller (
       state <= LOAD_WAIT_REQ;
 
       save_state_loading <= 1;
+      load_succeeded <= 0;
 
       ss_load <= 1;
     end
@@ -283,7 +289,7 @@ module save_state_controller (
         savestate_start_ack  <= 0;
         savestate_start_busy <= 1;
 
-        if (ss_req) begin
+        if (ss_req && !fifo_save_wr_full) begin
           // First req, end busy, start loading out
           // Duplicate of SAVE_WAIT_REQ
           state <= SAVE_WAIT_REQ_DELAY;
@@ -297,19 +303,23 @@ module save_state_controller (
       end
       SAVE_WAIT_REQ: begin
         // Wait for SS manager to send us more data
-        if (ss_req) begin
+        if (ss_req) pending_save_word <= 1;
+        if ((ss_req || pending_save_word) && !fifo_save_wr_full) begin
           state <= SAVE_WAIT_REQ_DELAY;
 
           // Latch data
           fifo_save_write_req <= 1;
+          pending_save_word <= 0;
         end else if (prev_ss_busy && ~ss_busy) begin
           // Left busy, SS manager is done
           state <= NONE;
         end
       end
       SAVE_WAIT_REQ_DELAY: begin
-        // Delay for empty to go low
-        state <= SAVE_WAIT_ACK;
+        // Acknowledge when queued, allowing the engine to prepare the next
+        // word while Pocket drains this FIFO. Waiting for empty starves reads.
+        ss_ack <= 1;
+        state <= SAVE_WAIT_REQ;
       end
       SAVE_WAIT_ACK: begin
         // Wait for bridge to read word
@@ -325,6 +335,7 @@ module save_state_controller (
         if (prev_ss_busy && ~ss_busy) begin
           // Finished load. Wait for APF ack
           state <= LOAD_WAIT_APF_START;
+          load_succeeded <= ss_load_done;
         end else if (~fifo_load_empty) begin
           if (did_req || ss_req) begin
             // Request and FIFO has data
@@ -363,7 +374,8 @@ module save_state_controller (
         fifo_load_clr <= 0;
 
         savestate_load_busy <= 0;
-        savestate_load_ok <= 1;
+        savestate_load_ok <= load_succeeded;
+        savestate_load_err <= !load_succeeded;
 
         save_state_loading <= 0;
       end

@@ -1,5 +1,5 @@
 upstream_url = "https://github.com/MiSTer-devel/NES_MiSTer.git"
-downstream_url = "https://github.com/agg23/openfpga-NES.git"
+downstream_url = "https://github.com/GrouchoGlasses42/openfpga-NES.git"
 
 core.workflow(
     # Must be default to run automatically when Copybara runs

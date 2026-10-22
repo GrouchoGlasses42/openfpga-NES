@@ -143,6 +143,12 @@ always @(posedge clk) begin
 			data <= {ch2_din,ch2_din};
 			ram_req <= wr[2] || (last_a[2] != ch2_addr[24:1]);
 			last_a[2] <= wr[2] ? '1 : ch2_addr[24:1];
+			// Save-file/state restores write through channel 2. A cached CPU
+			// or PPU word must not survive a write to the same physical word.
+			if(wr[2]) begin
+				if(last_a[0] == ch2_addr[24:1]) last_a[0] <= '1;
+				if(last_a[1] == ch2_addr[24:1]) last_a[1] <= '1;
+			end
 			ch2_busy <= 1;
 			state <= STATE_START;
 		end
@@ -162,6 +168,11 @@ always @(posedge clk) begin
 	if(mode != MODE_NORMAL || state != STATE_IDLE || reset) begin
 		state <= state + 1'd1;
 		if(state == STATE_LAST) state <= STATE_IDLE;
+	end
+	if(ss_load) begin
+		last_a[0] <= '1;
+		last_a[1] <= '1;
+		last_a[2] <= '1;
 	end
 end
 

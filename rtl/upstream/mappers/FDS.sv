@@ -77,6 +77,13 @@ reg timer_irq_repeat;
 reg [15:0] timerlatch;
 reg [15:0] timer;
 
+// 2C33 DRAM refresh watchdog. Accesses outside $6000-$DFFF refresh one
+// of 128 rows; completing a sweep reloads the CPU-cycle down counter.
+// Hardware research: NESdev, User:TakuikaNinja/FDS_Registers.
+reg [11:0] refresh_timer;
+reg [6:0] refresh_row;
+reg refresh_irq_en, refresh_irq;
+
 reg write_en;
 reg diskreset;
 reg disk_reg_en;
@@ -131,8 +138,16 @@ always@(posedge clk) begin
 		diskside <= 0;
 		timer_irq_en <= 0;
 		timer_irq <= 0;
+		refresh_timer <= 12'd4095;
+		refresh_row <= 0;
+		refresh_irq_en <= 0;
+		refresh_irq <= 0;
 		disk_reg_en <= 0;
 		disk_irq_en <= 0;
+		// Disk-I/O reset holds $4025 at $06, including vertical mirroring.
+		vertical <= 1;
+		motor_on <= 0;
+		diskreset <= 1;
 		write_en <= 0;
 		byte_transfer <= 0;
 		byte_transfer_flag <= 0;
@@ -183,9 +198,26 @@ always@(posedge clk) begin
 		old_eject_btn      <= SS_MAP2[   58];
 		diskpos            <= SS_MAP3[15: 0];
 		file_size          <= SS_MAP3[31:16];
+		refresh_timer      <= SS_MAP3[43:32];
+		refresh_row        <= SS_MAP3[50:44];
+		refresh_irq_en     <= SS_MAP3[   51];
+		refresh_irq        <= SS_MAP3[   52];
 	end else begin
 
 		if (ce) begin
+			if (~disk_reg_en) begin
+				refresh_timer <= 12'd4095;
+				refresh_row <= 0;
+				refresh_irq <= 0;
+			end else begin
+				refresh_timer <= refresh_timer - 1'b1;
+				if (~prg_is_ram) begin
+					refresh_row <= refresh_row + 1'b1;
+					if (&refresh_row) refresh_timer <= 12'd3245;
+				end
+				if (refresh_timer == 0 && refresh_irq_en &&
+				    !(!prg_is_ram && (&refresh_row))) refresh_irq <= 1;
+			end
 			if (timer_irq_en) begin
 				if (timer == 0) begin
 					timer_irq <= 1;
@@ -217,9 +249,22 @@ always@(posedge clk) begin
 
 					16'h4023: begin
 						disk_reg_en <= prg_din[0];
+						refresh_irq_en <= prg_din[7];
+						if (~prg_din[7]) refresh_irq <= 0;
 						if (~prg_din[0]) begin
+							refresh_timer <= 12'd4095;
+							refresh_row <= 0;
+							refresh_irq <= 0;
+							byte_transfer_flag <= 0;
 							timer_irq_en <= 0;
 							timer_irq <= 0;
+							// $4023.D0=0 resets the disk-control latch to $06.
+							vertical <= 1;
+							motor_on <= 0;
+							diskreset <= 1;
+							write_en <= 0;
+							byte_transfer <= 0;
+							disk_irq_en <= 0;
 						end
 					end
 
@@ -230,7 +275,8 @@ always@(posedge clk) begin
 						end
 					end
 
-					16'h4025: begin // disk control
+					16'h4025: if (disk_reg_en) begin // disk control; held in reset while disabled
+						byte_transfer_flag <= 0; // Acknowledge the disk IRQ only.
 						motor_on      <= prg_din[0];
 						diskreset     <= prg_din[1];
 						write_en      <= !prg_din[2];
@@ -313,6 +359,7 @@ always@(posedge clk) begin
 
 			if (read_4030) begin
 				timer_irq <= 0;
+				refresh_irq <= 0;
 				byte_transfer_flag <= 0;
 				read_4030 <= 0;
 			end
@@ -416,7 +463,11 @@ assign SS_MAP2_BACK[63:59] = 0;
 
 assign SS_MAP3_BACK[15: 0] = diskpos;
 assign SS_MAP3_BACK[31:16] = file_size;
-assign SS_MAP3_BACK[63:32] = 0;
+assign SS_MAP3_BACK[43:32] = refresh_timer;
+assign SS_MAP3_BACK[50:44] = refresh_row;
+assign SS_MAP3_BACK[   51] = refresh_irq_en;
+assign SS_MAP3_BACK[   52] = refresh_irq;
+assign SS_MAP3_BACK[63:53] = 0;
 
 
 // Loopy's patched bios use a trick to catch requested diskside for games
@@ -507,7 +558,8 @@ always @* begin
 	fds_prg_bus_write = 1'b1;
 
 	if (prg_ain == 16'h4030) begin //IRQ status
-		prg_dout_r = {byte_transfer_flag, diskend, 4'd0, 1'b0, timer_irq};
+		// D3 reads back $4025.D3 even when disk I/O writes are disabled.
+		prg_dout_r = {byte_transfer_flag, diskend, 2'd0, ~vertical, 1'b0, refresh_irq, timer_irq};
 	end else if (prg_ain == 16'h4032) begin //drive status
 		prg_dout_r = {4'h4, 1'b0, disk_eject, ~disk_ready, disk_eject};
 	end else if (prg_ain == 16'h4033) begin //power / exp
@@ -525,7 +577,7 @@ end
 
 assign prg_dout = prg_dout_r;
 
-assign irq = timer_irq | disk_irq;
+assign irq = timer_irq | disk_irq | refresh_irq;
 
 assign disk_eject = disk_eject_auto | fds_eject_btn;
 
@@ -703,6 +755,11 @@ reg  [1:0] master_vol;
 // Master timer
 reg [3:0] cycles;
 
+// This resets sound generation, not the register bus. In particular games
+// may initialize wave RAM, frequencies and modulation while $4023.D1 = 0.
+reg audio_reset;
+wire audio_reset_now = (wr && addr_in == 16'h4023) ? ~data_in[1] : audio_reset;
+
 wire [12:0] mod_acc_next = mod_accum[11:0] + mod_frequency;
 
 // Loopy's magical modulation math
@@ -715,7 +772,7 @@ wire [19:0] wave_pitch = $unsigned(temp3[11:4]) * wave_frequency;
 wire [11:0] mul_out = wave_latch * (vol_pwm_lat[5] ? 6'd32 : vol_pwm_lat);
 
 wire [15:0] level_out;
-assign audio_out = level_out[11:0];
+assign audio_out = audio_reset ? 12'd0 : level_out[11:0];
 
 always_comb begin
 	case (master_vol)
@@ -763,6 +820,13 @@ reg old_m2;
 
 old_m2 <= m2;
 if (reset) begin
+	audio_reset <= 1;
+	vol_disable <= 1;
+	vol_dir <= 0;
+	vol_speed <= 0;
+	vol_gain <= 0;
+	vol_pwm_lat <= 0;
+	mod_bias <= 0;
 	sweep_disable <= 1'b1;
 	env_disable <= 1'b1;
 	wave_disable <= 1'b1;
@@ -795,6 +859,7 @@ end else if (Savestate_MAPRAMWrEn) begin
 		8'h14: { sweep_env_ticks[7:0] } <= ss_di;
 		8'h15: { cycles, sweep_env_ticks[11:8] } <= ss_di;
 		8'h16: { mod_step, env_disable, vol_ticks } <= ss_di;
+		8'h17: audio_reset <= ss_di[0];
 		// $20-$3F
 		8'b001?????: mod_table[Savestate_MAPRAMAddr[4:0]] <= ss_di[2:0];
 		// $40-$7F
@@ -870,6 +935,7 @@ end else if (~old_m2 & m2) begin
 				wave_table[addr_in[5:0]] <= data_in[5:0];
 		end
 		case (addr_in)
+			16'h4023: audio_reset <= ~data_in[1];
 			16'h4080: begin
 				{vol_disable, vol_dir, vol_speed} <= data_in;
 				if (data_in[7]) vol_gain <= data_in[5:0];
@@ -938,6 +1004,19 @@ end else if (~old_m2 & m2) begin
 			end
 		endcase
 	end
+	if (audio_reset_now) begin
+		vol_disable <= 1;
+		vol_dir <= 0;
+		vol_speed <= 0;
+		vol_gain <= 0;
+		vol_pwm_lat <= 0;
+		vol_ticks <= 0;
+		vol_env_ticks <= 0;
+		wave_accum <= 0;
+		cycles <= 0;
+		// A new bias write is briefly observable before reset wins again.
+		if (!(wr && addr_in == 16'h4085)) mod_bias <= 0;
+	end
 end // if m2
 end
 
@@ -969,6 +1048,7 @@ always @(posedge clk) begin
 			8'h14: ss_do <= { sweep_env_ticks[7:0] };
 			8'h15: ss_do <= { cycles, sweep_env_ticks[11:8] };
 			8'h16: ss_do <= { mod_step, env_disable, vol_ticks };
+			8'h17: ss_do <= { 7'd0, audio_reset };
 			// $20-$3F
 			8'b001?????: ss_do <= { 5'd0, mod_table[Savestate_MAPRAMAddr[4:0]] };
 			// $40-$7F

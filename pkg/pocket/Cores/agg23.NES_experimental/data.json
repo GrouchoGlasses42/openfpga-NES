@@ -7,7 +7,11 @@
         "id": 0,
         "required": true,
         "parameters": "0x109",
-        "extensions": ["nes"],
+        "extensions": [
+          "nes",
+          "fc",
+          "fds"
+        ],
         "address": "0x10000000"
       },
       {
@@ -16,9 +20,12 @@
         "required": false,
         "parameters": "0x84",
         "nonvolatile": true,
-        "extensions": ["sav", "srm"],
+        "extensions": [
+          "sav",
+          "srm"
+        ],
         "address": "0x20000000",
-        "size_maximum": "0x40000"
+        "size_maximum": "0x80000"
       },
       {
         "name": "Custom Palette",
@@ -26,9 +33,22 @@
         "required": false,
         "filename": "palettes/custom.pal",
         "parameters": "0x3",
-        "extensions": ["pal"],
+        "extensions": [
+          "pal"
+        ],
         "size_maximum": "0xC0",
         "address": "0x10000000"
+      },
+      {
+        "name": "FDS BIOS",
+        "id": 1,
+        "required": false,
+        "filename": "fds.bios",
+        "extensions": [
+          "bios"
+        ],
+        "address": "0x12000000",
+        "size_maximum": "0x2000"
       }
     ]
   }

@@ -110,3 +110,35 @@ always @(posedge clk) begin
 end
 
 endmodule
+module vs_zapper_serializer (
+	input  clk,
+	input  reset,
+	input  enable,
+	input  strobe,
+	input  read_clock,
+	input  light,
+	input  trigger,
+	output serial_data
+);
+
+reg [7:0] report;
+reg last_read_clock;
+
+assign serial_data = report[0];
+
+always @(posedge clk) begin
+	if (reset || !enable) begin
+		report <= 8'd0;
+		last_read_clock <= 1'b0;
+	end else begin
+		// LSB-first read order: 0,0,0,0,1,0,light-detected,trigger.
+		if (strobe)
+			report <= {trigger, ~light, 1'b0, 1'b1, 4'b0000};
+		else if (!read_clock && last_read_clock)
+			report <= {1'b0, report[7:1]};
+
+		last_read_clock <= read_clock;
+	end
+end
+
+endmodule

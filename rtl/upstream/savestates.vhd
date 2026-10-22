@@ -51,7 +51,9 @@ end entity;
 
 architecture arch of savestates is
 
-   constant STATESIZE      : integer := 331776; -- * 4 = 1,3Mbyte
+   -- Exact payload in DWORDs: 64 internal QWORDs and the six RAM regions.
+   -- The Pocket bridge streams this payload, so its header must precede it.
+   constant STATESIZE      : integer := 330944;
    constant MAXSIZEMEM     : integer := 1048576;
    
    constant SETTLECOUNT    : integer := 100;
@@ -81,6 +83,7 @@ architecture arch of savestates is
    (
       IDLE,
       SAVE_WAITSETTLE,
+      SAVEHEADER_WRITE,
       SAVEINTERNALS_WAIT,
       SAVEINTERNALS_WRITE,
       SAVEMEMORY_NEXT,
@@ -126,8 +129,14 @@ begin
 
          bus_out_be    <= x"FF";
          
-         memory_slow <= memory_slow + 1;
-         if (memory_slow = 6) then
+         -- Five PPU clocks leave 20 SDRAM clocks per byte while sustaining
+         -- the Pocket's fastest bridge upload without overflowing its FIFO.
+         if (memory_slow = 4) then
+            memory_slow <= (others => '0');
+         else
+            memory_slow <= memory_slow + 1;
+         end if;
+         if (memory_slow = 3) then
             Save_RAMRdEn  <= '0';
             Save_RAMWrEn  <= '0';
          end if;
@@ -160,13 +169,21 @@ begin
                elsif (settle < SETTLECOUNT) then
                   settle <= settle + 1;
                else
-                  state            <= SAVEINTERNALS_WAIT;
-                  bus_out_Adr      <= std_logic_vector(to_unsigned(savestate_address + HEADERCOUNT, 26));
+                  state            <= SAVEHEADER_WRITE;
+                  bus_out_Adr      <= std_logic_vector(to_unsigned(savestate_address, 26));
+                  bus_out_Din      <= std_logic_vector(to_unsigned(STATESIZE, 32)) & std_logic_vector(header_amount);
+                  bus_out_ena      <= '1';
                   bus_out_rnw      <= '0';
                   BUS_adr          <= (others => '0');
                   count            <= 1;
                   saving_savestate <= '1';
                end if;            
+
+            when SAVEHEADER_WRITE =>
+               if (bus_out_done = '1') then
+                  bus_out_Adr <= std_logic_vector(to_unsigned(savestate_address + HEADERCOUNT, 26));
+                  state       <= SAVEINTERNALS_WAIT;
+               end if;
             
             when SAVEINTERNALS_WAIT =>
                bus_out_Din    <= BUS_Dout;
@@ -197,17 +214,13 @@ begin
                   memory_slow    <= (others => '0');
                   Save_RAMType   <= to_unsigned(savetype_counter, 3);
                else
-                  state          <= SAVESIZEAMOUNT;
-                  bus_out_Adr    <= std_logic_vector(to_unsigned(savestate_address, 26));
-                  bus_out_Din    <= std_logic_vector(to_unsigned(STATESIZE, 32)) & std_logic_vector(header_amount);
-                  bus_out_ena    <= '1';
-                  if (increaseSSHeaderCount = '0') then
-                     bus_out_be  <= x"F0";
-                  end if;
+                  state            <= IDLE;
+                  saving_savestate <= '0';
+                  sleep_savestate  <= '0';
                end if;
             
             when SAVEMEMORY_READ =>
-               if (memory_slow = 7) then
+               if (memory_slow = 4) then
                   bus_out_Din(bytecounter * 8 + 7 downto bytecounter * 8) <= Save_RAMReadData;
                   if (bytecounter < 7) then
                      bytecounter    <= bytecounter + 1;
@@ -299,7 +312,7 @@ begin
                count     <= 8;
             
             when LOADMEMORY_NEXT =>
-               if (memory_slow = 7) then
+               if (memory_slow = 4) then
                   if (savetype_counter < SAVETYPESCOUNT) then
                      state          <= LOADMEMORY_READ;
                      count          <= 8;
@@ -322,7 +335,7 @@ begin
                end if;
                
             when LOADMEMORY_WRITE =>
-               if (memory_slow = 7) then
+               if (memory_slow = 4) then
                   RAMAddrNext                    <= std_logic_vector(unsigned(RAMAddrNext) + 1);
                   Save_RAMAddr                   <= RAMAddrNext;
                   Save_RAMWrEn                   <= '1';

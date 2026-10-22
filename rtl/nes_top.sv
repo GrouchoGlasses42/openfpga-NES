@@ -69,6 +69,12 @@ module nes_top (
 
     input wire [2:0] turbo_speed,
     input wire swap_controllers,
+    input wire fds_eject_button,
+    input wire fds_auto_swap,
+    input wire fds_fast_load,
+    input wire save_transfer_active,
+    input wire save_transfer_loading,
+    output wire save_memory_ready,
 
     // Data in
     input wire        ioctl_wr,
@@ -81,14 +87,16 @@ module nes_top (
 
     // Save data
     output wire has_save,
+    output wire [31:0] save_size,
     input wire sd_buff_wr,
     input wire sd_buff_rd,
-    input wire [17:0] sd_buff_addr,
+    input wire [18:0] sd_buff_addr,
     output wire [7:0] sd_buff_din,
     input wire [7:0] sd_buff_dout,
 
     // Save states
     output wire mapper_has_savestate,
+    output wire ss_load_done,
 
     input wire ss_save,
     input wire ss_load,
@@ -127,10 +135,16 @@ module nes_top (
     output [15:0] audio
 );
 
+  `ifdef POCKET_FDS
+  localparam FDS_BUILD = 1'b1;
+  `else
+  localparam FDS_BUILD = 1'b0;
+  `endif
+
   // File types
   wire type_nsf = 0;
-  wire type_fds = 0;
-  wire type_nes = 1;
+  wire type_fds = FDS_BUILD;
+  wire type_nes = !FDS_BUILD;
   wire type_bios = 0;
 
   wire is_bios = 0;
@@ -140,9 +154,9 @@ module nes_top (
 
   wire                               [  1:0]                   nes_ce;
 
-  wire gg_code = 0;
+  wire [128:0] gg_code = 129'd0;
   wire gg_reset = 0;
-  wire gg_avail = 0;
+  wire gg_avail;
 
   wire int_audio = 1;
   wire ext_audio = 1;
@@ -153,10 +167,10 @@ module nes_top (
   wire                               [  8:0]                   scanline;
 
   wire                               [  1:0]                   diskside;
-  wire fds_busy = 0;
-  wire fds_eject = 0;
-  wire fds_auto_eject = 0;
-  wire                               [  1:0] max_diskside = 0;
+  wire fds_busy = save_transfer_active;
+  wire fds_eject = fds_eject_button;
+  wire fds_auto_eject = fds_auto_swap;
+  reg [1:0] max_diskside = 0;
 
   wire                               [ 24:0]                   cpu_addr;
   wire                                                         cpu_read;
@@ -171,6 +185,7 @@ module nes_top (
   wire                               [  7:0]                   ppu_din;
 
   wire                                                         state_loaded;
+  assign ss_load_done = state_loaded;
 
   wire downloading = ioctl_download;
 
@@ -184,7 +199,7 @@ module nes_top (
   wire pal_video = |sys_type;
 
   always_ff @(posedge clk_ppu_21_47) begin
-    pausecore <= sleep_savestate;
+    pausecore <= sleep_savestate | save_transfer_active;
 
     if (!corepaused) begin
       videopause_ce <= nes_ce + 1'd1;
@@ -197,6 +212,10 @@ module nes_top (
   NES nes (
       .clk           (clk_ppu_21_47),
       .reset_nes     (reset_nes),
+      .ppu_rst_behavior(1'b0),
+      .vs_dip_switches(8'h00),
+      .debug_dots(1'b0),
+      .dejitter_timing(1'b0),
       .cold_reset    (downloading & (type_fds | type_nes)),
       .pausecore     (pausecore),
       .corepaused    (corepaused),
@@ -230,6 +249,7 @@ module nes_top (
       .fds_eject     (fds_eject),
       .fds_auto_eject(fds_auto_eject),
       .max_diskside  (max_diskside),
+      .fds_fast      (fds_fast_load),
 
       // Memory transactions
       .cpumem_addr (cpu_addr),
@@ -252,6 +272,7 @@ module nes_top (
       .bram_dout    (bram_dout),
       .bram_write   (bram_write),
       .bram_override(bram_en),
+      .mapper_has_flashsaves(mapper_has_flashsaves),
       // .save_written (save_written),
 
       // savestates
@@ -276,6 +297,7 @@ module nes_top (
       .SaveStateExt_load(savestate_load),
 
       .savestate_busy(ss_busy),
+      .state_loaded(state_loaded),
 
       .SAVE_out_Din(ss_din),  // data read from savestate
       .SAVE_out_Dout(ss_dout),  // data written to savestate
@@ -365,8 +387,9 @@ module nes_top (
   wire paddle_en = 0;
   wire paddle_btn = 0;
   wire [4:0] joypad1_data = {2'b0, mic, paddle_en & paddle_btn, joypad_bits[0]};
-  // Upper 4 bits are other peripherals
-  wire [4:0] joypad2_data = {trigger, light, 2'b0, joypad_bits2[0]};
+  // A reset Zapper reports darkness (light=1). Disconnect both Zapper lines
+  // when disabled so a standard controller does not drive $4017 bits 3/4.
+  wire [4:0] joypad2_data = {trigger & lightgun_enabled, light & lightgun_enabled, 2'b0, joypad_bits2[0]};
 
   wire [7:0] nes_joy_A = {
     p1_dpad_right,
@@ -478,8 +501,16 @@ module nes_top (
   // Loading
   wire [7:0] file_input = ioctl_dout;
   //   wire [7:0] loader_input = (loader_busy && !downloading) ? !nsf ? bios_data : nsf_data : file_input;
-  wire [7:0] loader_input = file_input;
-  wire loader_clk = ioctl_wr;
+  wire [7:0] bios_data;
+  wire bios_write = FDS_BUILD && ioctl_wr && ioctl_addr[25];
+  wire [7:0] loader_input = (FDS_BUILD && loader_busy && !downloading) ? bios_data : file_input;
+  dpram #(" ", 13) bios_ram (
+      .clock_a(clk_ppu_21_47), .address_a(ioctl_addr[12:0]),
+      .data_a(ioctl_dout), .wren_a(bios_write), .q_a(),
+      .clock_b(clk_ppu_21_47), .address_b(loader_addr[12:0]),
+      .data_b(8'b0), .wren_b(1'b0), .q_b(bios_data)
+  );
+  wire loader_clk = ioctl_wr && !ioctl_addr[25];
   wire [24:0] loader_addr;
   wire [7:0] loader_write_data;
   reg loader_reset;
@@ -492,14 +523,18 @@ module nes_top (
   wire [3:0] prg_nvram = mapper_flags[34:31];
   wire loader_busy, loader_done, loader_fail;
   wire [9:0] prg_mask, chr_mask;
-  assign has_save = mapper_flags[25];
+  wire mapper_has_flashsaves;
+  assign has_save = FDS_BUILD || mapper_flags[25] || mapper_has_flashsaves;
+  assign save_size = mapper_has_flashsaves ? (32'h4000 << mapper_flags[10:8]) : 32'h40000;
 
   GameLoader loader (
       .clk         (clk_ppu_21_47),
       .reset       (loader_reset),
       .downloading (downloading),
       .filetype    ({4'b0000, type_nsf, type_fds, type_nes, type_bios}),
-      .is_bios     (is_bios),                                             // boot0 bios
+      .is_bios     (is_bios),
+      .clearval    (1'b0),
+      .cleardata   (8'b0),                                             // boot0 bios
       .indata      (loader_input),
       .indata_clk  (loader_clk),
       .mem_addr    (loader_addr),
@@ -514,7 +549,11 @@ module nes_top (
       // .rom_loaded  (rom_loaded)
   );
 
-  always @(posedge clk_ppu_21_47) if (loader_done) mapper_flags <= loader_flags;
+  always @(posedge clk_ppu_21_47) begin
+    if (loader_done) mapper_flags <= loader_flags;
+    if (FDS_BUILD && savestate_load) max_diskside <= SS_Ext[17:16];
+    else if (FDS_BUILD && downloading && loader_write) max_diskside <= loader_addr[17:16];
+  end
 
   // reset after download
   reg [7:0] download_reset_cnt;
@@ -546,7 +585,8 @@ module nes_top (
   //     ;
   //   end
 
-  wire reset_nes = ~init_reset_n || download_reset || loader_fail || hold_reset || external_reset || clearing_ram;
+  wire reset_nes = ~init_reset_n || download_reset || loader_fail || hold_reset || external_reset || clearing_ram ||
+      (save_transfer_active && save_transfer_loading);
   // arm_reset || bk_loading || bk_loading_req || (old_sys_type != status[24:23]);
 
   //   reg [1:0] old_sys_type;
@@ -601,15 +641,27 @@ module nes_top (
 
   wire save_busy;
 
-  // SDRAM controller is stupid and only detects the rising edge of read and write
-  // iff the rising edge occurs on a non-busy cycle
-  wire save_wr = sd_buff_wr && ~save_busy;
-  wire save_rd = sd_buff_rd && ~save_busy;
+  // Hold each request until the SDRAM controller can accept it. Its old_rd /
+  // old_wr bits are latched on acceptance, so busy must not pulse the request.
+  wire save_wr = sd_buff_wr;
+  wire save_rd = sd_buff_rd;
+
+  // Persistent reads wait for the NES to pause. Persistent writes hold it in
+  // reset. In both cases finish the FDS BIOS copy/initial RAM clear first,
+  // then stop CPU/PPU requests and let the last SDRAM command drain.
+  wire save_memory_owned = save_transfer_active && !downloading && !loader_busy &&
+      !clearing_ram && !sleep_savestate && (save_transfer_loading || corepaused);
+  reg [3:0] save_drain = 0;
+  always @(posedge clk_85_9) begin
+    if (!save_memory_owned) save_drain <= 0;
+    else if (!(&save_drain)) save_drain <= save_drain + 1'b1;
+  end
+  assign save_memory_ready = &save_drain;
 
   // sleep_savestate is set by NES core to indicate save state transition is occuring
   // Savestate_* is set by the NES core to control SDRAM for state
   // save_addr is set by controller in this code
-  wire [24:0] ch2_addr = sleep_savestate ? Savestate_SDRAMAddr : {7'b0001111, save_addr};
+  wire [24:0] ch2_addr = sleep_savestate ? Savestate_SDRAMAddr : mapper_has_flashsaves ? {6'b0, save_addr} : {7'b0001111, save_addr[17:0]};
   wire ch2_wr = sleep_savestate ? Savestate_SDRAMWrEn : save_wr;
   wire [7:0] ch2_din = sleep_savestate ? Savestate_SDRAMWriteData : sd_buff_dout;
   wire ch2_rd = sleep_savestate ? Savestate_SDRAMRdEn : save_rd;
@@ -623,16 +675,16 @@ module nes_top (
 
       // cpu/chipset interface
       .ch0_addr((downloading | loader_busy) ? loader_addr : {3'b0, ppu_addr}),
-      .ch0_wr  (loader_write | ppu_write),
+      .ch0_wr  ((loader_write | ppu_write) && !save_memory_owned),
       .ch0_din ((downloading | loader_busy) ? loader_write_data : ppu_dout),
-      .ch0_rd  (~(downloading | loader_busy) & ppu_read),
+      .ch0_rd  (~(downloading | loader_busy) & ppu_read && !save_memory_owned),
       .ch0_dout(ppu_din),
       // .ch0_busy(),
 
       .ch1_addr(cpu_addr),
-      .ch1_wr  (cpu_write),
+      .ch1_wr  (cpu_write && !save_memory_owned),
       .ch1_din (cpu_dout),
-      .ch1_rd  (cpu_read),
+      .ch1_rd  (cpu_read && !save_memory_owned),
       .ch1_dout(cpu_din),
       // .ch1_busy(),
 
@@ -644,7 +696,8 @@ module nes_top (
       .ch2_dout(save_dout),
       .ch2_busy(save_busy),
 
-      .refresh(refresh),
+      // Refresh in otherwise idle memory slots while the CPU is held reset.
+      .refresh(refresh | save_memory_owned),
       .ss_in  (sdram_ss_in),
       .ss_load(savestate_load),
       .ss_out (sdram_ss_out),
@@ -674,8 +727,16 @@ module nes_top (
 
   reg prev_is_downloading = 0;
   reg prev_palette_download = 0;
+  reg prev_cartridge_download = 0;
 
   always @(posedge clk_85_9) begin
+    prev_cartridge_download <= ioctl_download;
+    if (ioctl_download && !prev_cartridge_download) begin
+      did_load_save <= 0;
+      clearing_ram <= 0;
+      clear_ram_addr <= 0;
+      clear_wr <= 0;
+    end
     prev_is_downloading   <= is_downloading;
     prev_palette_download <= palette_download;
 
@@ -684,9 +745,12 @@ module nes_top (
       did_load_save <= 1;
     end
 
-    if (prev_is_downloading && ~is_downloading && ~did_load_save && ~prev_palette_download) begin
+    if (prev_is_downloading && ~is_downloading && ~did_load_save && ~prev_palette_download && !FDS_BUILD) begin
       // All assets have been loaded and no save was loaded and we didn't just load a palette
       clearing_ram <= 1;
+      clear_ram_addr <= 0;
+      clear_wr <= 1;
+      clear_div <= 15;
     end
 
     if (clearing_ram) begin
@@ -719,14 +783,14 @@ module nes_top (
       .wren_a(clearing_ram ? clear_wr : bram_write),
       .q_a(bram_din),
 
-      .clock_b(clk_ppu_21_47),
+      .clock_b(clk_85_9),
       .address_b(sd_buff_addr),
       .data_b(sd_buff_dout),
       .wren_b(sd_buff_wr),
       .q_b(eeprom_dout)
   );
 
-  wire [17:0] save_addr = clearing_ram ? clear_ram_addr : sd_buff_addr;
+  wire [18:0] save_addr = clearing_ram ? {1'b0, clear_ram_addr} : sd_buff_addr;
 
   ///////////////////////////// savestates /////////////////////////////////
 
@@ -760,7 +824,8 @@ module nes_top (
   );
 
   assign SS_Ext_BACK[15:0]  = sdram_ss_out;
-  assign SS_Ext_BACK[63:16] = 48'b0;  // free to be used
+  assign SS_Ext_BACK[17:16] = max_diskside;
+  assign SS_Ext_BACK[63:18] = 46'b0;  // free to be used
 
   // wire bk_busy = 0;
   // wire bk_loading = 0;

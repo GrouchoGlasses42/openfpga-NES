@@ -89,6 +89,54 @@
         "value": 1
       },
       {
+        "name": "Composite Blend",
+        "id": 49,
+        "type": "list",
+        "enabled": true,
+        "address": "0x214",
+        "persist": true,
+        "writeonly": true,
+        "defaultval": 0,
+        "options": [
+          {
+            "value": 0,
+            "name": "Off"
+          },
+          {
+            "value": 1,
+            "name": "Kitrinx Style"
+          },
+          {
+            "value": 2,
+            "name": "NTSC Light"
+          },
+          {
+            "value": 3,
+            "name": "NTSC Medium"
+          },
+          {
+            "value": 4,
+            "name": "NTSC Strong"
+          },
+          {
+            "value": 5,
+            "name": "PAL Light"
+          },
+          {
+            "value": 6,
+            "name": "PAL Medium"
+          },
+          {
+            "value": 7,
+            "name": "PAL Strong"
+          },
+          {
+            "value": 8,
+            "name": "PAL Strong+"
+          }
+        ]
+      },
+      {
         "name": "Palette",
         "id": 60,
         "type": "list",
@@ -191,6 +239,51 @@
           "adjust_small": 1,
           "adjust_large": 4
         }
+      },
+      {
+        "name": "FDS Options",
+        "id": 100,
+        "type": "action",
+        "enabled": false
+      },
+      {
+        "name": "Eject / Change Disk",
+        "id": 101,
+        "type": "action",
+        "enabled": true,
+        "address": "0x320",
+        "value": 1
+      },
+      {
+        "name": "Disk Swap",
+        "id": 102,
+        "type": "list",
+        "enabled": true,
+        "address": "0x324",
+        "persist": true,
+        "writeonly": true,
+        "defaultval": 0,
+        "options": [
+          {
+            "value": 0,
+            "name": "Automatic"
+          },
+          {
+            "value": 1,
+            "name": "Manual"
+          }
+        ]
+      },
+      {
+        "name": "Fast Disk Access",
+        "id": 103,
+        "type": "check",
+        "enabled": true,
+        "address": "0x328",
+        "persist": true,
+        "writeonly": true,
+        "defaultval": 0,
+        "value": 1
       }
     ],
     "messages": []

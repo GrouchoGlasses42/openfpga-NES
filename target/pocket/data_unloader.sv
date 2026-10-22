@@ -171,6 +171,7 @@ module data_unloader #(
 
   localparam READ_DATA_DELAY = 1;
   localparam READ_DATA_WRITE = 2;
+  localparam READ_DATA_WAIT = 3;
 
   // Receive data from memory and write to APF bridge
   always @(posedge clk_74a) begin
@@ -202,10 +203,18 @@ module data_unloader #(
         end else begin
           apf_bridge_write_data <= apf_final_data;
 
-          data_read_req <= 1;
-          data_send_state <= READ_DATA_DELAY;
+          data_send_state <= READ_DATA_WAIT;
 
           apf_data_count <= apf_data_count + 1;
+        end
+      end
+      READ_DATA_WAIT: begin
+        // SDRAM returns bytes more slowly than the bridge clock. Do not
+        // consume another byte until it has crossed the response FIFO.
+        data_send_state <= READ_DATA_WAIT;
+        if (!data_empty) begin
+          data_read_req <= 1;
+          data_send_state <= READ_DATA_DELAY;
         end
       end
     endcase

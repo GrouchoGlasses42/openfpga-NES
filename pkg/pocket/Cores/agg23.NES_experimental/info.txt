@@ -1,0 +1,5 @@
+NES_experimental: experimental derivative of agg23's Pocket port and MiSTer's NES core.
+Not an official agg23 release.
+Core by Ludvig Strigeus, sorgelig, greyrogue, Kitrinx, paulb-nl, Adam Gastineau and other contributors.
+Nine blend modes from snckrz's NES Analogizer fork, based on Kitrinx's filter.
+See Documentation/agg23.NES_experimental/README.md for instructions and credits.

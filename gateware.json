@@ -1,11 +1,11 @@
 {
-    "name": "NES",
-    "displayName": "NES",
-    "description": "Nintendo Entertainment System and Famicom. Nintendo's first home console",
+    "name": "NES_experimental",
+    "displayName": "NES_experimental",
+    "description": "NES/FDS with MiSTer mappers, composite blend and save states",
     "author": "agg23",
-    "version": "1.0.0",
+    "version": "1.0.1+20261022",
     "license": "GPL-3.0-or-later",
-    "repository": "https://github.com/agg23/openFPGA-NES",
+    "repository": "https://github.com/GrouchoGlasses42/openfpga-NES",
     "keywords": [
         "ecosystem:gateman"
     ],

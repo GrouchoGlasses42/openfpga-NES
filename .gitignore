@@ -1,5 +1,23 @@
 *.rbf_r
-*.zip
+__pycache__/
+*.py[cod]
+/release-notes/
+*.[zZ][iI][pP]
+*.7[zZ]
+*.[rR][aA][rR]
+# Local game/test ROMs, BIOS dumps and user saves are never published.
+*.[nN][eE][sS]
+*.[fF][dD][sS]
+*.[fF][cC]
+*.[uU][nN][fF]
+*.[uU][nN][iI][fF]
+*.[qQ][dD]
+*.[nN][sS][fF]
+*.[nN][sS][fF][eE]
+*.[rR][oO][mM]
+*.[bB][iI][oO][sS]
+*.[sS][aA][vV]
+*.[sS][rR][mM]
 pkg/**/*.rev
 rtl/sim/work/
 rtl/sim/*.hex

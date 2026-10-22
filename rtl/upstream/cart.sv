@@ -133,6 +133,7 @@ MMC0 mmc0(
 // Notes  :                                                                    //
 // Games  : Simon's Quest                                                      //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[1] | POCKET_MAPPER_MASK[155] | POCKET_MAPPER_MASK[171]) begin : include_mmc1
 MMC1 mmc1(
 	.clk        (clk),
 	.ce         (ce),
@@ -163,6 +164,9 @@ MMC1 mmc1(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[0])
 );
+end else begin : omit_mmc1
+assign SaveStateBus_wired_or[0] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Tepples                                                            //
@@ -172,6 +176,7 @@ MMC1 mmc1(
 // Games  : Donkey Kong                                                        //
 //*****************************************************************************//
 wire mapper28_en = me[0] | me[2] | me[3] | me[7] | me[94] | me[97] | me[180] | me[185] | me[28];
+generate if (POCKET_MAPPER_MASK[0] | POCKET_MAPPER_MASK[2] | POCKET_MAPPER_MASK[3] | POCKET_MAPPER_MASK[7] | POCKET_MAPPER_MASK[28] | POCKET_MAPPER_MASK[94] | POCKET_MAPPER_MASK[97] | POCKET_MAPPER_MASK[180] | POCKET_MAPPER_MASK[185]) begin : include_map28
 Mapper28 map28(
 	.clk        (clk),
 	.ce         (ce),
@@ -203,6 +208,9 @@ Mapper28 map28(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[1])
 );
+end else begin : omit_map28
+assign SaveStateBus_wired_or[1] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : UNROM 512                                                          //
@@ -211,6 +219,7 @@ Mapper28 map28(
 // Notes  : Homebrew mapper                                                    //
 // Games  : More Glider                                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[30]) begin : include_map30
 Mapper30 map30(
 	.clk        (clk),
 	.ce         (ce),
@@ -241,6 +250,9 @@ Mapper30 map30(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[26])
 );
+end else begin : omit_map30
+assign SaveStateBus_wired_or[26] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 32                                                          //
@@ -249,6 +261,7 @@ Mapper30 map30(
 // Notes  :                                                                    //
 // Games  : Image Fight                                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[32]) begin : include_map32
 Mapper32 map32(
 	.clk        (clk),
 	.ce         (ce),
@@ -279,6 +292,9 @@ Mapper32 map32(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[28])
 );
+end else begin : omit_map32
+assign SaveStateBus_wired_or[28] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : MMC2                                                               //
@@ -287,6 +303,7 @@ Mapper32 map32(
 // Notes  : Working                                                            //
 // Games  : Mike Tyson's Punch-Out                                             //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[9]) begin : include_mmc2
 MMC2 mmc2(
 	.clk        (clk),
 	.ce         (ce),
@@ -320,6 +337,9 @@ MMC2 mmc2(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[6])
 );
+end else begin : omit_mmc2
+assign SaveStateBus_wired_or[6] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : MMC3                                                               //
@@ -334,6 +354,7 @@ wire mmc3_en = me[118] | me[119] | me[47] | me[206] | me[112] | me[88] | me[154]
 	| me[192] | me[194] | me[195] | me[196] | me[4] | me[189] | me[268] | me[205] | me[208]
 	| me[45] | me[52];
 
+generate if (POCKET_MAPPER_MASK[4] | POCKET_MAPPER_MASK[33] | POCKET_MAPPER_MASK[37] | POCKET_MAPPER_MASK[45] | POCKET_MAPPER_MASK[47] | POCKET_MAPPER_MASK[48] | POCKET_MAPPER_MASK[52] | POCKET_MAPPER_MASK[74] | POCKET_MAPPER_MASK[76] | POCKET_MAPPER_MASK[80] | POCKET_MAPPER_MASK[82] | POCKET_MAPPER_MASK[88] | POCKET_MAPPER_MASK[95] | POCKET_MAPPER_MASK[112] | POCKET_MAPPER_MASK[118] | POCKET_MAPPER_MASK[119] | POCKET_MAPPER_MASK[154] | POCKET_MAPPER_MASK[189] | POCKET_MAPPER_MASK[191] | POCKET_MAPPER_MASK[192] | POCKET_MAPPER_MASK[194] | POCKET_MAPPER_MASK[195] | POCKET_MAPPER_MASK[196] | POCKET_MAPPER_MASK[205] | POCKET_MAPPER_MASK[206] | POCKET_MAPPER_MASK[207] | POCKET_MAPPER_MASK[208] | POCKET_MAPPER_MASK[268]) begin : include_mmc3
 MMC3 mmc3 (
 	.clk        (clk),
 	.ce         (ce),
@@ -368,6 +389,9 @@ MMC3 mmc3 (
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[2])
 );
+end else begin : omit_mmc3
+assign SaveStateBus_wired_or[2] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : MMC4                                                               //
@@ -376,6 +400,7 @@ MMC3 mmc3 (
 // Notes  :                                                                    //
 // Games  : Fire Emblem                                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[10]) begin : include_mmc4
 MMC4 mmc4(
 	.clk        (clk),
 	.ce         (ce),
@@ -409,6 +434,9 @@ MMC4 mmc4(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[7])
 );
+end else begin : omit_mmc4
+assign SaveStateBus_wired_or[7] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : MMC5                                                               //
@@ -417,6 +445,7 @@ MMC4 mmc4(
 // Notes  : Uses expansion audio and PPU hacks. Could use a thorough review.   //
 // Games  : Castlevania III, Just Breed                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[5]) begin : include_mmc5
 MMC5 mmc5(
 	.clk        (clk),
 	.ce         (ce),
@@ -462,6 +491,10 @@ MMC5 mmc5(
 	.Savestate_MAPRAMWriteData(Savestate_MAPRAMWriteData),
 	.Savestate_MAPRAMReadData (SaveStateRAM_wired_or[1])
 );
+end else begin : omit_mmc5
+assign SaveStateBus_wired_or[16] = '0;
+assign SaveStateRAM_wired_or[1] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : CPROM                                                              //
@@ -470,6 +503,7 @@ MMC5 mmc5(
 // Notes  :                                                                    //
 // Games  : Videomation                                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[13]) begin : include_map13
 Mapper13 map13(
 	.clk        (clk),
 	.ce         (ce),
@@ -493,6 +527,9 @@ Mapper13 map13(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map13
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 15                                                          //
@@ -501,6 +538,7 @@ Mapper13 map13(
 // Notes  :                                                                    //
 // Games  : Bao Xiao San Guo                                                   //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[15]) begin : include_map15
 Mapper15 map15(
 	.clk        (clk),
 	.ce         (ce),
@@ -524,6 +562,9 @@ Mapper15 map15(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map15
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Bandai 16                                                          //
@@ -535,6 +576,7 @@ Mapper15 map15(
 wire map16_prg_write, map16_ovr;
 wire [7:0] map16_data_out;
 wire [17:0] map16_mapper_addr;
+generate if (POCKET_MAPPER_MASK[16] | POCKET_MAPPER_MASK[153] | POCKET_MAPPER_MASK[159]) begin : include_map16
 Mapper16 map16(
 	.clk        (clk),
 	.ce         (ce),
@@ -571,6 +613,13 @@ Mapper16 map16(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[5])
 );
+end else begin : omit_map16
+assign SaveStateBus_wired_or[5] = '0;
+assign map16_mapper_addr = '0;
+assign map16_data_out = '0;
+assign map16_prg_write = '0;
+assign map16_ovr = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Jaleco 18                                                          //
@@ -579,6 +628,7 @@ Mapper16 map16(
 // Notes  :                                                                    //
 // Games  : Pizza Pop!, Plasma Ball, USA Ice Hockey in FC                      //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[18]) begin : include_map18
 Mapper18 map18(
 	.clk        (clk),
 	.ce         (ce),
@@ -609,6 +659,9 @@ Mapper18 map18(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[27])
 );
+end else begin : omit_map18
+assign SaveStateBus_wired_or[27] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : BNROM                                                              //
@@ -617,6 +670,7 @@ Mapper18 map18(
 // Notes  :                                                                    //
 // Games  : Mashou, Deadly Towers                                              //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[34]) begin : include_map34
 Mapper34 map34(
 	.clk        (clk),
 	.ce         (ce),
@@ -647,6 +701,9 @@ Mapper34 map34(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[31])
 );
+end else begin : omit_map34
+assign SaveStateBus_wired_or[31] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 41                                                          //
@@ -655,6 +712,7 @@ Mapper34 map34(
 // Notes  :                                                                    //
 // Games  : Caltron 6-in-1                                                     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[41]) begin : include_map41
 Mapper41 map41(
 	.clk        (clk),
 	.ce         (ce),
@@ -678,6 +736,9 @@ Mapper41 map41(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map41
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : NTDEC 2722, Mapper42                                               //
@@ -686,6 +747,7 @@ Mapper41 map41(
 // Notes  : Used for converted FDS carts.                                      //
 // Games  : Super Mario Bros. 2 (LF36) Love Warrior Nicol, Green Beret (unl)   //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[40] | POCKET_MAPPER_MASK[42]) begin : include_map42
 Mapper42 map42(
 	.clk        (clk),
 	.ce         (ce),
@@ -709,6 +771,9 @@ Mapper42 map42(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map42
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Kaiser KS202                                                       //
@@ -717,29 +782,33 @@ Mapper42 map42(
 // Notes  : Used for converted FDS carts.                                      //
 // Games  : Bubble Bobble, Super Mario Bros. 2(j)                              //
 //*****************************************************************************//
-// KS202 map142(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[142]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (audio_in),
-// 	.audio_b    (audio_out_b)
-// );
+generate if (POCKET_MAPPER_MASK[142]) begin : include_map142
+KS202 map142(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[142]),
+	.flags      (flags),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (audio_in),
+	.audio_b    (audio_out_b)
+);
+end else begin : omit_map142
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Irem H3001                                                         //
@@ -748,6 +817,7 @@ Mapper42 map42(
 // Notes  :                                                                    //
 // Games  : Spartan X 2, Daiku no Gen-san 2                                    //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[65]) begin : include_map65
 Mapper65 map65(
 	.clk        (clk),
 	.ce         (ce),
@@ -778,6 +848,9 @@ Mapper65 map65(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[29])
 );
+end else begin : omit_map65
+assign SaveStateBus_wired_or[29] = '0;
+end endgenerate
 
 //*********************************************************************************//
 // Name   : GxROM                                                                  //
@@ -787,6 +860,7 @@ Mapper65 map65(
 // Games  : Doraemon, Dragon Power, Sidewinder (145), Taiwan Mahjong 16 (149)      //
 //*********************************************************************************//
 wire mapper66_en = me[11] | me[38] | me[46] | me[86] | me[87] | me[101] | me[140] | me[66] | me[144] | me[145] | me[149];
+generate if (POCKET_MAPPER_MASK[11] | POCKET_MAPPER_MASK[38] | POCKET_MAPPER_MASK[46] | POCKET_MAPPER_MASK[66] | POCKET_MAPPER_MASK[86] | POCKET_MAPPER_MASK[87] | POCKET_MAPPER_MASK[101] | POCKET_MAPPER_MASK[140] | POCKET_MAPPER_MASK[144] | POCKET_MAPPER_MASK[145] | POCKET_MAPPER_MASK[149]) begin : include_map66
 Mapper66 map66(
 	.clk        (clk),
 	.ce         (ce),
@@ -817,6 +891,9 @@ Mapper66 map66(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[3])
 );
+end else begin : omit_map66
+assign SaveStateBus_wired_or[3] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sunsoft-3                                                          //
@@ -825,6 +902,7 @@ Mapper66 map66(
 // Notes  :                                                                    //
 // Games  : Fantasy Zone II, Mito Koumon                                       //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[67] | POCKET_MAPPER_MASK[190]) begin : include_map67
 Mapper67 map67(
 	.clk        (clk),
 	.ce         (ce),
@@ -855,6 +933,9 @@ Mapper67 map67(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[20])
 );
+end else begin : omit_map67
+assign SaveStateBus_wired_or[20] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sunsoft-4                                                          //
@@ -863,6 +944,7 @@ Mapper67 map67(
 // Notes  :                                                                    //
 // Games  : After Burner (J), Majaraja                                         //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[68]) begin : include_map68
 Mapper68 map68(
 	.clk        (clk),
 	.ce         (ce),
@@ -893,6 +975,9 @@ Mapper68 map68(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[21])
 );
+end else begin : omit_map68
+assign SaveStateBus_wired_or[21] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sunsoft FME-7                                                      //
@@ -901,6 +986,7 @@ Mapper68 map68(
 // Notes  : Audio needs better mixing/processing                               //
 // Games  : Gimmick!, Barcode World, Hebereke                                  //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[69]) begin : include_map69
 Mapper69 map69(
 	.clk        (clk),
 	.ce         (ce),
@@ -931,6 +1017,9 @@ Mapper69 map69(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[12])
 );
+end else begin : omit_map69
+assign SaveStateBus_wired_or[12] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Codemasters/Camerica                                               //
@@ -939,6 +1028,7 @@ Mapper69 map69(
 // Notes  :                                                                    //
 // Games  : Micro Machines, Big Nose the Caveman                               //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[71] | POCKET_MAPPER_MASK[232]) begin : include_map71
 Mapper71 map71(
 	.clk        (clk),
 	.ce         (ce),
@@ -969,6 +1059,9 @@ Mapper71 map71(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[8])
 );
+end else begin : omit_map71
+assign SaveStateBus_wired_or[8] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Jaleco JF-17                                                       //
@@ -977,6 +1070,7 @@ Mapper71 map71(
 // Notes  :                                                                    //
 // Games  : Pro Tennis (J), Pinball Quest (J), Pro Soccer (J)                  //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[72] | POCKET_MAPPER_MASK[92]) begin : include_map72
 Mapper72 map72(
 	.clk        (clk),
 	.ce         (ce),
@@ -1007,6 +1101,9 @@ Mapper72 map72(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[30])
 );
+end else begin : omit_map72
+assign SaveStateBus_wired_or[30] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 77                                                          //
@@ -1015,6 +1112,7 @@ Mapper72 map72(
 // Notes  :                                                                    //
 // Games  : Napoleon Senki                                                     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[77]) begin : include_map77
 Mapper77 map77(
 	.clk        (clk),
 	.ce         (ce),
@@ -1045,6 +1143,9 @@ Mapper77 map77(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[32])
 );
+end else begin : omit_map77
+assign SaveStateBus_wired_or[32] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Holy Diver, NTDEC N715021                                          //
@@ -1053,6 +1154,7 @@ Mapper77 map77(
 // Notes  : Submapper 1 Requires NES 2.0                                       //
 // Games  : Holy Diver, Uchuusent, Super Gun                                   //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[70] | POCKET_MAPPER_MASK[78] | POCKET_MAPPER_MASK[81] | POCKET_MAPPER_MASK[152]) begin : include_map78
 Mapper78 map78(
 	.clk        (clk),
 	.ce         (ce),
@@ -1083,6 +1185,9 @@ Mapper78 map78(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[33])
 );
+end else begin : omit_map78
+assign SaveStateBus_wired_or[33] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : NINA                                                               //
@@ -1092,6 +1197,7 @@ Mapper78 map78(
 // Games  : Tiles of Fate, Dudes with Attitude, Krazy Kreatures,               //
 //          Twin Eagle (146), Mahjong World (148), Jovial Race (133)           //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[79] | POCKET_MAPPER_MASK[113] | POCKET_MAPPER_MASK[133] | POCKET_MAPPER_MASK[146] | POCKET_MAPPER_MASK[148]) begin : include_map79
 Mapper79 map79(
 	.clk        (clk),
 	.ce         (ce),
@@ -1122,6 +1228,9 @@ Mapper79 map79(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[4])
 );
+end else begin : omit_map79
+assign SaveStateBus_wired_or[4] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Cony/Yoko (unlicensed)                                             //
@@ -1130,6 +1239,7 @@ Mapper79 map79(
 // Notes  : No user ability to control dipswitch setting                       //
 // Games  : Fatal Fury 2, World Heroes 2, Dragon Ball Party                    //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[83]) begin : include_map83
 Mapper83 map83(
 	.clk        (clk),
 	.ce         (ce),
@@ -1153,6 +1263,9 @@ Mapper83 map83(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map83
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sunsoft                                                            //
@@ -1161,6 +1274,7 @@ Mapper83 map83(
 // Notes  :                                                                    //
 // Games  : Tenka no Goikenban                                                 //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[89] | POCKET_MAPPER_MASK[93] | POCKET_MAPPER_MASK[184]) begin : include_map89
 Mapper89 map89(
 	.clk        (clk),
 	.ce         (ce),
@@ -1191,6 +1305,9 @@ Mapper89 map89(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[34])
 );
+end else begin : omit_map89
+assign SaveStateBus_wired_or[34] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Nintendo Vs. System ROM board                                     //
@@ -1199,6 +1316,7 @@ Mapper89 map89(
 // Notes  : OUT2 CHR select, Gumshoe PRG select, and absent-socket open bus    //
 // Games  : Vs. Super Mario Bros., Gumshoe                                    //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[99]) begin : include_map99
 Mapper99 map99(
 	.clk        (clk),
 	.ce         (ce),
@@ -1230,6 +1348,9 @@ Mapper99 map99(
 	.SaveStateBus_load (SaveStateBus_load),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[40])
 );
+end else begin : omit_map99
+assign SaveStateBus_wired_or[40] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Magic Dragon                                                       //
@@ -1238,6 +1359,7 @@ Mapper99 map99(
 // Notes  :                                                                    //
 // Games  : Magic Dragon                                                       //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[107]) begin : include_map107
 Mapper107 map107(
 	.clk        (clk),
 	.ce         (ce),
@@ -1261,6 +1383,9 @@ Mapper107 map107(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map107
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : GTROM                                                              //
@@ -1269,6 +1394,7 @@ Mapper107 map107(
 // Notes  : No LED or flash sector erase                                       //
 // Games  : Super Homebrew War, Candelabra: Estoscerro, more homebrew          //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[111]) begin : include_map111
 Mapper111 map111(
 	.clk        (clk),
 	.ce         (ce),
@@ -1299,6 +1425,9 @@ Mapper111 map111(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[25])
 );
+end else begin : omit_map111
+assign SaveStateBus_wired_or[25] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 165                                                         //
@@ -1307,6 +1436,7 @@ Mapper111 map111(
 // Notes  : Possibly merge-able with MMC3, only used for one bootleg game      //
 // Games  : Fire Emblem (unl)                                                  //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[165]) begin : include_map165
 Mapper165 map165(
 	.clk        (clk),
 	.ce         (ce),
@@ -1334,6 +1464,9 @@ Mapper165 map165(
 	.m2_inv     (cpu_ce),
 	.paused     (paused)
 );
+end else begin : omit_map165
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Magic Floor                                                        //
@@ -1342,6 +1475,7 @@ Mapper165 map165(
 // Notes  : Appears unused in modern packs?                                    //
 // Games  : Magic Floor                                                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[218]) begin : include_map218
 Mapper218 map218(
 	.clk        (clk),
 	.ce         (ce),
@@ -1367,6 +1501,9 @@ Mapper218 map218(
 	// savestates              
 	// savestates support - but no state in mapper needs saving
 );
+end else begin : omit_map218
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 227                                                 //
@@ -1375,6 +1512,7 @@ Mapper218 map218(
 // Notes  :                                                                    //
 // Games  : 1200-in-1, 600-in-1, Bio Hazard                                    //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[227]) begin : include_map227
 Mapper227 map227(
 	.clk        (clk),
 	.ce         (ce),
@@ -1398,6 +1536,9 @@ Mapper227 map227(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map227
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Active Enterprises                                                 //
@@ -1406,6 +1547,7 @@ Mapper227 map227(
 // Notes  :                                                                    //
 // Games  : Cheetamen                                                          //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[228]) begin : include_map228
 Mapper228 map228(
 	.clk        (clk),
 	.ce         (ce),
@@ -1429,6 +1571,9 @@ Mapper228 map228(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map228
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Maxi 15                                                            //
@@ -1439,6 +1584,7 @@ Mapper228 map228(
 //          the system itself is not behaving correctly.                       //
 // Games  : Maxi-15 Pack (unl)                                                 //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[234]) begin : include_map234
 Mapper234 map234(
 	.clk        (clk),
 	.ce         (ce),
@@ -1462,6 +1608,9 @@ Mapper234 map234(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map234
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 246                                                         //
@@ -1470,6 +1619,7 @@ Mapper234 map234(
 // Notes  :                                                                    //
 // Games  : Feng Shen Bang                                                     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[246]) begin : include_map246
 Mapper246 map246(
 	.clk        (clk),
 	.ce         (ce),
@@ -1493,6 +1643,9 @@ Mapper246 map246(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map246
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : RAMBO1 (Tengen MMC3)                                               //
@@ -1501,38 +1654,42 @@ Mapper246 map246(
 // Notes  : Consider merging with MMC3                                         //
 // Games  : Rolling Thunder, Klax, Skull and Crossbones, Alien Syndrome (158)  //
 //*****************************************************************************//
-// Rambo1 rambo1(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[64] | me[158]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (audio_in),
-// 	.audio_b    (audio_out_b),
-// 	// Special ports
-// 	.chr_ain_o  (chr_ain_orig),
-// 	// savestates
-// 	.SaveStateBus_Din  (SaveStateBus_Din ), 
-// 	.SaveStateBus_Adr  (SaveStateBus_Adr ),
-// 	.SaveStateBus_wren (SaveStateBus_wren),
-// 	.SaveStateBus_rst  (SaveStateBus_rst ),
-// 	.SaveStateBus_load (SaveStateBus_load ),
-// 	.SaveStateBus_Dout (SaveStateBus_wired_or[24])
-// );
+generate if (POCKET_MAPPER_MASK[64] | POCKET_MAPPER_MASK[158]) begin : include_rambo1
+Rambo1 rambo1(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[64] | me[158]),
+	.flags      (flags),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (audio_in),
+	.audio_b    (audio_out_b),
+	// Special ports
+	.chr_ain_o  (chr_ain_orig),
+	// savestates
+	.SaveStateBus_Din  (SaveStateBus_Din ), 
+	.SaveStateBus_Adr  (SaveStateBus_Adr ),
+	.SaveStateBus_wren (SaveStateBus_wren),
+	.SaveStateBus_rst  (SaveStateBus_rst ),
+	.SaveStateBus_load (SaveStateBus_load ),
+	.SaveStateBus_Dout (SaveStateBus_wired_or[24])
+);
+end else begin : omit_rambo1
+assign SaveStateBus_wired_or[24] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : NesEvent                                                           //
@@ -1541,6 +1698,7 @@ Mapper246 map246(
 // Notes  : This wraps the MMC1 mapper, consider merging more elegantly        //
 // Games  : Nintendo World Championships 1990 (start hack)                     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[105]) begin : include_nesev
 NesEvent nesev(
 	.clk        (clk),
 	.ce         (ce),
@@ -1564,6 +1722,9 @@ NesEvent nesev(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_nesev
+
+end endgenerate
 
 
 //*****************************************************************************//
@@ -1573,6 +1734,7 @@ NesEvent nesev(
 // Notes  :                                                                    //
 // Games  : King Kong 2, Exciting Boxing, Tetsuwan Atom                        //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[75]) begin : include_vrc1
 VRC1 vrc1(
 	.clk        (clk),
 	.ce         (ce),
@@ -1603,6 +1765,9 @@ VRC1 vrc1(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[18])
 );
+end else begin : omit_vrc1
+assign SaveStateBus_wired_or[18] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Konami VRC-3                                                       //
@@ -1611,6 +1776,7 @@ VRC1 vrc1(
 // Notes  :                                                                    //
 // Games  : Salamander (j)                                                     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[73]) begin : include_vrc3
 VRC3 vrc3(
 	.clk        (clk),
 	.ce         (ce),
@@ -1641,6 +1807,9 @@ VRC3 vrc3(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[19])
 );
+end else begin : omit_vrc3
+assign SaveStateBus_wired_or[19] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Konami VRC2/4                                                      //
@@ -1649,6 +1818,7 @@ VRC3 vrc3(
 // Notes  :                                                                    //
 // Games  : Wai Wai World 2, Twinbee 3, Contra (j), Gradius II (j)             //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[21] | POCKET_MAPPER_MASK[22] | POCKET_MAPPER_MASK[23] | POCKET_MAPPER_MASK[25] | POCKET_MAPPER_MASK[27]) begin : include_vrc24
 VRC24 vrc24(
 	.clk        (clk),
 	.ce         (ce),
@@ -1679,6 +1849,9 @@ VRC24 vrc24(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[9])
 );
+end else begin : omit_vrc24
+assign SaveStateBus_wired_or[9] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Konami VRC5                                                        //
@@ -1687,6 +1860,7 @@ VRC24 vrc24(
 // Notes  :                                                                    //
 // Games  : Konami Q-Ta (Space School and Space College (J))                   //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[547]) begin : include_vrc5
 VRC5 vrc5(
 	.clk        (clk),
 	.ce         (ce),
@@ -1729,6 +1903,10 @@ VRC5 vrc5(
 	.Savestate_MAPRAMWriteData(Savestate_MAPRAMWriteData),
 	.Savestate_MAPRAMReadData (SaveStateRAM_wired_or[2])
 );
+end else begin : omit_vrc5
+assign SaveStateBus_wired_or[36] = '0;
+assign SaveStateRAM_wired_or[2] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Konami VRC-6                                                       //
@@ -1737,6 +1915,7 @@ VRC5 vrc5(
 // Notes  : External audio needs to be mixed correctly.                        //
 // Games  : Akamajou Densetsu, Esper Dream 2, Mouryou Senki Madara             //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[24] | POCKET_MAPPER_MASK[26]) begin : include_vrc6
 VRC6 vrc6(
 	.clk        (clk),
 	.ce         (ce),
@@ -1767,6 +1946,9 @@ VRC6 vrc6(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[10])
 );
+end else begin : omit_vrc6
+assign SaveStateBus_wired_or[10] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Konami VRC-7                                                       //
@@ -1775,6 +1957,7 @@ VRC6 vrc6(
 // Notes  : Audio mixing needs evaluation                                      //
 // Games  : Lagrange Point, Tiny Toon Aventures 2 (j)                          //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[85]) begin : include_vrc7
 VRC7 vrc7(
 	.clk        (clk),
 	.ce         (ce),
@@ -1798,6 +1981,9 @@ VRC7 vrc7(
 	.audio_in   (vrc7_audio),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_vrc7
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Namco 163                                                          //
@@ -1806,6 +1992,7 @@ VRC7 vrc7(
 // Notes  : This mapper requires submappers for correct operation              //
 // Games  : Digital Devil Story, Battle Fleet, Famista                         //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[19] | POCKET_MAPPER_MASK[210]) begin : include_n163
 N163 n163(
 	.clk        (clk),
 	.ce         (ce),
@@ -1838,6 +2025,9 @@ N163 n163(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[14])
 );
+end else begin : omit_n163
+assign SaveStateBus_wired_or[14] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Waixing 162                                                        //
@@ -1846,6 +2036,7 @@ N163 n163(
 // Notes  :                                                                    //
 // Games  : Zelda - San Shen Zhi Li                                            //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[162]) begin : include_map162
 Mapper162 map162(
 	.clk        (clk),
 	.ce         (ce),
@@ -1869,6 +2060,9 @@ Mapper162 map162(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map162
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Nanjing 163                                                        //
@@ -1877,6 +2071,7 @@ Mapper162 map162(
 // Notes  :                                                                    //
 // Games  : Final Fantasy VII (163), Pokemon Yellow (163)                      //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[163]) begin : include_map163
 Nanjing map163(
 	.clk        (clk),
 	.ce         (ce),
@@ -1902,6 +2097,9 @@ Nanjing map163(
 	// Special Ports
 	.paused     (paused)
 );
+end else begin : omit_map163
+
+end endgenerate
 
 
 //*****************************************************************************//
@@ -1911,6 +2109,7 @@ Nanjing map163(
 // Notes  :                                                                    //
 // Games  : Final Fantasy V                                                    //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[164]) begin : include_map164
 Mapper164 map164(
 	.clk        (clk),
 	.ce         (ce),
@@ -1934,6 +2133,9 @@ Mapper164 map164(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map164
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : DIS23C01 DAOU ROM CONTROLLER, Korea                                //
@@ -1943,36 +2145,40 @@ Mapper164 map164(
 // Games  : Metal Force (K), Buzz and Waldog (K), General's Son (K),           //
 //          Koko Adventure (K)                                                 //
 //*****************************************************************************//
-// Mapper156 daou(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[156]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (audio_in),
-// 	.audio_b    (audio_out_b),
-// 	// savestates
-// 	.SaveStateBus_Din  (SaveStateBus_Din ), 
-// 	.SaveStateBus_Adr  (SaveStateBus_Adr ),
-// 	.SaveStateBus_wren (SaveStateBus_wren),
-// 	.SaveStateBus_rst  (SaveStateBus_rst ),
-// 	.SaveStateBus_load (SaveStateBus_load ),
-// 	.SaveStateBus_Dout (SaveStateBus_wired_or[37])
-// );
+generate if (POCKET_MAPPER_MASK[156]) begin : include_daou
+Mapper156 daou(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[156]),
+	.flags      (flags),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (audio_in),
+	.audio_b    (audio_out_b),
+	// savestates
+	.SaveStateBus_Din  (SaveStateBus_Din ), 
+	.SaveStateBus_Adr  (SaveStateBus_Adr ),
+	.SaveStateBus_wren (SaveStateBus_wren),
+	.SaveStateBus_rst  (SaveStateBus_rst ),
+	.SaveStateBus_load (SaveStateBus_load ),
+	.SaveStateBus_Dout (SaveStateBus_wired_or[37])
+);
+end else begin : omit_daou
+assign SaveStateBus_wired_or[37] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sachen 8259                                                        //
@@ -1982,6 +2188,7 @@ Mapper164 map164(
 // Games  : The Great Wall (137), Silver Eagle (138), Hell Fighter (139),      //
 //          Super Cart 6 - 6 in 1(141), Strategist (150), Poker III (243)      //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[137] | POCKET_MAPPER_MASK[138] | POCKET_MAPPER_MASK[139] | POCKET_MAPPER_MASK[141] | POCKET_MAPPER_MASK[150] | POCKET_MAPPER_MASK[243]) begin : include_sachen
 Sachen8259 sachen(
 	.clk        (clk),
 	.ce         (ce),
@@ -2012,6 +2219,9 @@ Sachen8259 sachen(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[22])
 );
+end else begin : omit_sachen
+assign SaveStateBus_wired_or[22] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sachen JV001                                                       //
@@ -2021,6 +2231,7 @@ Sachen8259 sachen(
 // Games  : Wei Lai Xiao Zi (136), Chinese Kungfu (147), Creatom (132),        //
 //          F-15 City War (173), Mahjong Block (172), Strike Wolf (36)         //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[36] | POCKET_MAPPER_MASK[132] | POCKET_MAPPER_MASK[136] | POCKET_MAPPER_MASK[147] | POCKET_MAPPER_MASK[172] | POCKET_MAPPER_MASK[173]) begin : include_sachenj
 SachenJV001 sachenj(
 	.clk        (clk),
 	.ce         (ce),
@@ -2051,6 +2262,9 @@ SachenJV001 sachenj(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[23])
 );
+end else begin : omit_sachenj
+assign SaveStateBus_wired_or[23] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Sachen NROM                                                        //
@@ -2059,6 +2273,7 @@ SachenJV001 sachenj(
 // Notes  :                                                                    //
 // Games  : Dancing Blocks, Magical Mathematics                                //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[143]) begin : include_sachenn
 SachenNROM sachenn(
 	.clk        (clk),
 	.ce         (ce),
@@ -2084,6 +2299,9 @@ SachenNROM sachenn(
 	// savestates              
 	// savestates support - but no state in mapper needs saving
 );
+end else begin : omit_sachenn
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : JY Company                                                         //
@@ -2093,39 +2311,43 @@ SachenNROM sachenn(
 // Games  : Aladdin (90), Power Rangers 3 (209), Warioland II (35),            //
 //          Tiny Toon Adventures 6 (211)                                       //
 //*****************************************************************************//
-// JYCompany jycompany(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[90] | me[209] | me[211] | me[35]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (audio_in),
-// 	.audio_b    (audio_out_b),
-// 	// Special ports
-// 	.paused     (paused),
-// 	.chr_ain_o  (chr_ain_orig),
-// 	// savestates
-// 	.SaveStateBus_Din  (SaveStateBus_Din ), 
-// 	.SaveStateBus_Adr  (SaveStateBus_Adr ),
-// 	.SaveStateBus_wren (SaveStateBus_wren),
-// 	.SaveStateBus_rst  (SaveStateBus_rst ),
-// 	.SaveStateBus_load (SaveStateBus_load ),
-// 	.SaveStateBus_Dout (SaveStateBus_wired_or[35])
-// );
+generate if (POCKET_MAPPER_MASK[35] | POCKET_MAPPER_MASK[90] | POCKET_MAPPER_MASK[209] | POCKET_MAPPER_MASK[211]) begin : include_jycompany
+JYCompany jycompany(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[90] | me[209] | me[211] | me[35]),
+	.flags      (flags),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (audio_in),
+	.audio_b    (audio_out_b),
+	// Special ports
+	.paused     (paused),
+	.chr_ain_o  (chr_ain_orig),
+	// savestates
+	.SaveStateBus_Din  (SaveStateBus_Din ), 
+	.SaveStateBus_Adr  (SaveStateBus_Adr ),
+	.SaveStateBus_wren (SaveStateBus_wren),
+	.SaveStateBus_rst  (SaveStateBus_rst ),
+	.SaveStateBus_load (SaveStateBus_load ),
+	.SaveStateBus_Dout (SaveStateBus_wired_or[35])
+);
+end else begin : omit_jycompany
+assign SaveStateBus_wired_or[35] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 91                                                          //
@@ -2136,6 +2358,7 @@ SachenNROM sachenn(
 //          Mario & Sonic 2,  Mario Rider,                                     //
 //          1995 Super HIK 4-in-1 (JY-016), 1995 Super HiK 4-in-1 (JY-017)     //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[91]) begin : include_map91
 Mapper91 map91(
 	.clk        (clk),
 	.ce         (ce),
@@ -2160,6 +2383,9 @@ Mapper91 map91(
 	.audio_b    (audio_out_b),
 	.chr_ain_o  (chr_ain_orig)
 );
+end else begin : omit_map91
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 225                                                         //
@@ -2168,6 +2394,7 @@ Mapper91 map91(
 // Notes  : Defining 225 as with 74'670 (4-nybble RAM) and 255 as without      //
 // Games  : 64-in-1 (225), 110-in-1 (255 - with glitched menu selection)       //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[225] | POCKET_MAPPER_MASK[255]) begin : include_map225
 Mapper225 map225(
 	.clk        (clk),
 	.ce         (ce),
@@ -2191,6 +2418,9 @@ Mapper225 map225(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map225
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 200                                                         //
@@ -2199,6 +2429,7 @@ Mapper225 map225(
 // Notes  : Simple address-latch multicart (NROM-128 style)                    //
 // Games  : 36-in-1                                                            //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[200] | POCKET_MAPPER_MASK[212]) begin : include_map200
 Mapper200 map200(
 	.clk        (clk),
 	.ce         (ce),
@@ -2222,6 +2453,9 @@ Mapper200 map200(
 	.audio_in   (audio_in),
 	.audio_b    (audio_out_b)
 );
+end else begin : omit_map200
+
+end endgenerate
 
 //*****************************************************************************//
 // Name   : AVE NINA-08                                                        //
@@ -2230,6 +2464,7 @@ Mapper200 map200(
 // Notes  : 30-in-1 multicart supporting NINA-03 and Color Dreams games        //
 // Games  : (Unreleased Maxivision 30-in-1 multicart)                          //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[487]) begin : include_map487
 Mapper487 map487(
 	.clk        (clk),
 	.ce         (ce),
@@ -2260,6 +2495,9 @@ Mapper487 map487(
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[39])
 );
+end else begin : omit_map487
+assign SaveStateBus_wired_or[39] = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 413                                                         //
@@ -2268,6 +2506,7 @@ Mapper487 map487(
 // Notes  :                                                                    //
 // Games  : Super Russian Roulette                                             //
 //*****************************************************************************//
+generate if (POCKET_MAPPER_MASK[413]) begin : include_map413
 Mapper413 map413 (
 	.clk        (clk),
 	.ce         (ce),
@@ -2296,6 +2535,9 @@ Mapper413 map413 (
 	.m2_inv     (cpu_ce),
 	.paused     (paused)
 );
+end else begin : omit_map413
+assign prg_aoute_m413 = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : FDS                                                                //
@@ -2305,45 +2547,50 @@ Mapper413 map413 (
 // Games  : Bio Miracle for audio, Various unlicensed games for compatibility. //
 //*****************************************************************************//
 tri0 [1:0] fds_diskside;
-// MapperFDS mapfds(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[20]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (fds_audio),
-// 	.audio_b    (audio_out_b),
-// 	// Special ports
-// 	.prg_dbus   (prg_from_ram),
-// 	.audio_dout	(fds_data),
-// 	.diskside_b (fds_diskside),
-// 	.max_diskside (max_diskside),
-// 	.fds_busy   (fds_busy),
-// 	.fds_eject_btn (fds_eject),
-// 	.fds_auto_eject_en (fds_auto_eject),
-// 	.fds_fast   (fds_fast),
-// 	// savestates
-// 	.SaveStateBus_Din  (SaveStateBus_Din ),
-// 	.SaveStateBus_Adr  (SaveStateBus_Adr ),
-// 	.SaveStateBus_wren (SaveStateBus_wren),
-// 	.SaveStateBus_rst  (SaveStateBus_rst ),
-// 	.SaveStateBus_load (SaveStateBus_load ),
-// 	.SaveStateBus_Dout (SaveStateBus_wired_or[38])
-// );
+generate if (POCKET_MAPPER_MASK[20]) begin : include_mapfds
+MapperFDS mapfds(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[20]),
+	.flags      (flags),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (fds_audio),
+	.audio_b    (audio_out_b),
+	// Special ports
+	.prg_dbus   (prg_from_ram),
+	.audio_dout	(fds_data),
+	.diskside_b (fds_diskside),
+	.max_diskside (max_diskside),
+	.fds_busy   (fds_busy),
+	.fds_eject_btn (fds_eject),
+	.fds_auto_eject_en (fds_auto_eject),
+	.fds_fast   (fds_fast),
+	// savestates
+	.SaveStateBus_Din  (SaveStateBus_Din ),
+	.SaveStateBus_Adr  (SaveStateBus_Adr ),
+	.SaveStateBus_wren (SaveStateBus_wren),
+	.SaveStateBus_rst  (SaveStateBus_rst ),
+	.SaveStateBus_load (SaveStateBus_load ),
+	.SaveStateBus_Dout (SaveStateBus_wired_or[38])
+);
+end else begin : omit_mapfds
+assign SaveStateBus_wired_or[38] = '0;
+assign fds_diskside = '0;
+end endgenerate
 
 //*****************************************************************************//
 // Name   : Mapper 31                                                          //
@@ -2353,46 +2600,45 @@ tri0 [1:0] fds_diskside;
 // Games  : Famicompo Pico 2014, NSF 1.0                                       //
 //*****************************************************************************//
 wire [5:0] exp_audioe;
-// NSF nsfplayer(
-// 	.clk        (clk),
-// 	.ce         (ce),
-// 	.enable     (me[31]),
-// 	.flags      (flags),
-// 	.prg_ain    (prg_ain),
-// 	.prg_aout_b (prg_addr_b),
-// 	.prg_read   (prg_read),
-// 	.prg_write  (prg_write),
-// 	.prg_din    (prg_din),
-// 	.prg_dout_b (prg_dout_b),
-// 	.prg_allow_b(prg_allow_b),
-// 	.chr_ain    (chr_ain),
-// 	.chr_aout_b (chr_addr_b),
-// 	.chr_read   (chr_read),
-// 	.chr_dout_b (chr_dout_b), // Special port
-// 	.chr_allow_b(chr_allow_b),
-// 	.vram_a10_b (vram_a10_b),
-// 	.vram_ce_b  (vram_ce_b),
-// 	.irq_b      (irq_b),
-// 	.flags_out_b(flags_out_b),
-// 	.audio_in   (exp_audioe[5] ? ss5b_audio :
-// 	             exp_audioe[4] ? n163_audio :
-// 	             exp_audioe[3] ? mmc5_audio :
-// 	             exp_audioe[2] ? fds_audio  :
-// 	             exp_audioe[1] ? vrc7_audio :
-// 	             exp_audioe[0] ? vrc6_audio :
-// 					 audio_in),
-// 	.exp_audioe (exp_audioe),  // Expansion Enabled (0x0=None, 0x1=VRC6, 0x2=VRC7, 0x4=FDS, 0x8=MMC5, 0x10=N163, 0x20=SS5B
-// 	.audio_b    (audio_out_b),
-// 	// Special ports
-// 	.chr_write  (chr_write),
-// 	.fds_din    (fds_data)
-// );
+generate if (POCKET_MAPPER_MASK[31]) begin : include_nsfplayer
+NSF nsfplayer(
+	.clk        (clk),
+	.ce         (ce),
+	.enable     (me[31]),
+	.flags      ({flags[31:25], 4'd0, flags[20:0]}),
+	.prg_ain    (prg_ain),
+	.prg_aout_b (prg_addr_b),
+	.prg_read   (prg_read),
+	.prg_write  (prg_write),
+	.prg_din    (prg_din),
+	.prg_dout_b (prg_dout_b),
+	.prg_allow_b(prg_allow_b),
+	.chr_ain    (chr_ain),
+	.chr_aout_b (chr_addr_b),
+	.chr_read   (chr_read),
+	.chr_dout_b (chr_dout_b), // Special port
+	.chr_allow_b(chr_allow_b),
+	.vram_a10_b (vram_a10_b),
+	.vram_ce_b  (vram_ce_b),
+	.irq_b      (irq_b),
+	.flags_out_b(flags_out_b),
+	.audio_in   (audio_in),
+	.exp_audioe (exp_audioe),  // Expansion Enabled (0x0=None, 0x1=VRC6, 0x2=VRC7, 0x4=FDS, 0x8=MMC5, 0x10=N163, 0x20=SS5B
+	.audio_b    (audio_out_b),
+	// Special ports
+	.chr_write  (chr_write),
+	.fds_din    (fds_data)
+);
+end else begin : omit_nsfplayer
+assign exp_audioe = '0;
+end endgenerate
 
 wire [15:0] ss5b_audio;
+generate if (POCKET_MAPPER_MASK[69]) begin : include_snd_5bm
 SS5b_mixed snd_5bm (
 	.clk(clk),
 	.ce(ce),
-	.enable(me[69] | (me[31] && exp_audioe[5])),
+	.enable(me[69]),
 	.wren(prg_write),
 	.addr_in(prg_ain),
 	.data_in(prg_din),
@@ -2406,14 +2652,19 @@ SS5b_mixed snd_5bm (
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[13])
 );
+end else begin : omit_snd_5bm
+assign SaveStateBus_wired_or[13] = '0;
+assign ss5b_audio = '0;
+end endgenerate
 
 wire [15:0] n163_audio;
 wire [7:0] n163_data;
+generate if (POCKET_MAPPER_MASK[19]) begin : include_snd_n163
 namco163_mixed snd_n163 (
 	.clk(clk),
 	.ce(ce),
 	.submapper(flags[24:21]),
-	.enable(me[19] | (me[31] && exp_audioe[4])),
+	.enable(me[19]),
 	.wren(prg_write),
 	.addr_in(prg_ain),
 	.data_in(prg_din),
@@ -2435,13 +2686,20 @@ namco163_mixed snd_n163 (
 	.Savestate_MAPRAMWriteData(Savestate_MAPRAMWriteData),
 	.Savestate_MAPRAMReadData (SaveStateRAM_wired_or[0])
 );
+end else begin : omit_snd_n163
+assign SaveStateBus_wired_or[15] = '0;
+assign SaveStateRAM_wired_or[0] = '0;
+assign n163_audio = '0;
+assign n163_data = '0;
+end endgenerate
 
 wire [15:0] mmc5_audio;
 wire [7:0] mmc5_data;
+generate if (POCKET_MAPPER_MASK[5]) begin : include_snd_mmc5
 mmc5_mixed snd_mmc5 (
 	.clk(clk),
 	.ce(ce),
-	.enable(me[5] | (me[31] && exp_audioe[3])),
+	.enable(me[5]),
 	.wren(prg_write),
 	.rden(prg_read),
 	.addr_in(prg_ain),
@@ -2457,45 +2715,61 @@ mmc5_mixed snd_mmc5 (
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[17])
 );
+end else begin : omit_snd_mmc5
+assign SaveStateBus_wired_or[17] = '0;
+assign mmc5_audio = '0;
+assign mmc5_data = '0;
+end endgenerate
 
 wire [15:0] fds_audio;
 wire [7:0] fds_data;
-// fds_mixed snd_fds (
-// 	.clk(clk),
-// 	.ce(ce),
-// 	.enable(me[20] | (me[31] && exp_audioe[2])),
-// 	.wren(prg_write),
-// 	.addr_in(prg_ain),
-// 	.data_in(prg_din),
-// 	.data_out(fds_data),
-// 	.audio_in(audio_in),
-// 	.audio_out(fds_audio),
-// 	// savestates
-// 	.Savestate_MAPRAMactive   (Savestate_MAPRAMactive),
-// 	.Savestate_MAPRAMAddr     (Savestate_MAPRAMAddr[7:0]),
-// 	.Savestate_MAPRAMRdEn     (Savestate_MAPRAMRdEn),
-// 	.Savestate_MAPRAMWrEn     (Savestate_MAPRAMWrEn),
-// 	.Savestate_MAPRAMWriteData(Savestate_MAPRAMWriteData),
-// 	.Savestate_MAPRAMReadData (SaveStateRAM_wired_or[3])
-// );
+generate if (POCKET_MAPPER_MASK[20]) begin : include_snd_fds
+fds_mixed snd_fds (
+	.clk(clk),
+	.ce(ce),
+	.enable(me[20]),
+	.wren(prg_write),
+	.addr_in(prg_ain),
+	.data_in(prg_din),
+	.data_out(fds_data),
+	.audio_in(audio_in),
+	.audio_out(fds_audio),
+	// savestates
+	.Savestate_MAPRAMactive   (Savestate_MAPRAMactive),
+	.Savestate_MAPRAMAddr     (Savestate_MAPRAMAddr[7:0]),
+	.Savestate_MAPRAMRdEn     (Savestate_MAPRAMRdEn),
+	.Savestate_MAPRAMWrEn     (Savestate_MAPRAMWrEn),
+	.Savestate_MAPRAMWriteData(Savestate_MAPRAMWriteData),
+	.Savestate_MAPRAMReadData (SaveStateRAM_wired_or[3])
+);
+end else begin : omit_snd_fds
+assign SaveStateRAM_wired_or[3] = '0;
+assign fds_audio = '0;
+assign fds_data = '0;
+end endgenerate
 
 wire [15:0] vrc7_audio;
-// vrc7_mixed snd_vrc7 (
-// 	.clk(clk),
-// 	.ce(ce),
-// 	.enable(me[85] | (me[31] && exp_audioe[1])),
-// 	.wren(prg_write),
-// 	.addr_in(prg_ain),
-// 	.data_in(prg_din),
-// 	.audio_in(audio_in),
-// 	.audio_out(vrc7_audio)
-// );
+generate if (POCKET_MAPPER_MASK[85]) begin : include_snd_vrc7
+vrc7_mixed snd_vrc7 (
+	.clk(clk),
+	.ce(ce),
+	.enable(me[85]),
+	.wren(prg_write),
+	.addr_in(prg_ain),
+	.data_in(prg_din),
+	.audio_in(audio_in),
+	.audio_out(vrc7_audio)
+);
+end else begin : omit_snd_vrc7
+assign vrc7_audio = '0;
+end endgenerate
 
 wire [15:0] vrc6_audio;
+generate if (POCKET_MAPPER_MASK[24] | POCKET_MAPPER_MASK[26]) begin : include_snd_vrc6
 vrc6_mixed snd_vrc6 (
 	.clk(clk),
 	.ce(ce),
-	.enable(me[24] | me[26] | (me[31] && exp_audioe[0])),
+	.enable(me[24] | me[26]),
 	.wren(prg_write),
 	.addr_invert(me[26]),
 	.addr_in(prg_ain),
@@ -2510,13 +2784,18 @@ vrc6_mixed snd_vrc6 (
 	.SaveStateBus_load (SaveStateBus_load ),
 	.SaveStateBus_Dout (SaveStateBus_wired_or[11])
 );
+end else begin : omit_snd_vrc6
+assign SaveStateBus_wired_or[11] = '0;
+assign vrc6_audio = '0;
+end endgenerate
 
 
-wire [1023:0] me;
+`include "mapper_config.vh"
+reg [1023:0] me;
 
 always @* begin
 	me = 1024'd0;
-	me[{flags[18:17],flags[7:0]}] = 1'b1;
+	me[{flags[18:17],flags[7:0]}] = POCKET_MAPPER_MASK[{flags[18:17],flags[7:0]}];
 
 	// Mapper output to cart pins
 	{prg_aout[21:0], prg_allow,   chr_aout,   vram_a10,   vram_ce,   chr_allow,   prg_dout,   chr_dout,   irq,   audio} =

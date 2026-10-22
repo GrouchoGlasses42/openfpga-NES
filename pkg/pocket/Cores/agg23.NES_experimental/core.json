@@ -1,0 +1,62 @@
+{
+  "core": {
+    "magic": "APF_VER_1",
+    "metadata": {
+      "platform_ids": [
+        "nes"
+      ],
+      "shortname": "NES_experimental",
+      "description": "NES/FDS with MiSTer mappers, composite blend and save states",
+      "author": "agg23",
+      "url": "https://github.com/GrouchoGlasses42/openfpga-NES",
+      "version": "1.0.1+20261022",
+      "date_release": "2026-10-22"
+    },
+    "framework": {
+      "target_product": "Analogue Pocket",
+      "version_required": "1.1",
+      "sleep_supported": true,
+      "dock": {
+        "supported": true,
+        "analog_output": false
+      },
+      "hardware": {
+        "link_port": false,
+        "cartridge_adapter": -1
+      },
+      "chip32_vm": "loader.bin"
+    },
+    "cores": [
+      {
+        "name": "standard",
+        "id": 0,
+        "filename": "standard.rev"
+      },
+      {
+        "name": "discrete",
+        "id": 1,
+        "filename": "discrete.rev"
+      },
+      {
+        "name": "special",
+        "id": 2,
+        "filename": "special.rev"
+      },
+      {
+        "name": "expansion",
+        "id": 3,
+        "filename": "expansion.rev"
+      },
+      {
+        "name": "vrc7",
+        "id": 4,
+        "filename": "vrc7.rev"
+      },
+      {
+        "name": "fds",
+        "id": 5,
+        "filename": "fds.rev"
+      }
+    ]
+  }
+}
