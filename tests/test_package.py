@@ -15,7 +15,7 @@ class PackageTests(unittest.TestCase):
     def test_local_build_notes_and_python_cache_are_excluded(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "source"
-            for name in ("release-notes/private.json", "tests/__pycache__/test.pyc", "README.md", "tests/test_loader.py"):
+            for name in ("release-notes/private.json", "docs/PLL Reconfig.md", "tests/__pycache__/test.pyc", "README.md", "tests/test_loader.py"):
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("synthetic fixture")

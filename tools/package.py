@@ -85,7 +85,7 @@ def archive_tree(root, output, prefix=""):
             archive.writestr("Assets/nes/common/", b"")
         for path in sorted(root.rglob("*")):
             relative = path.relative_to(root)
-            if (path.is_file() and not {".git", "__pycache__", "release-notes"}.intersection(relative.parts)
+            if (path.is_file() and not {".git", "__pycache__", "release-notes", "docs"}.intersection(relative.parts)
                     and path.suffix.lower() not in PRIVATE_ASSET_SUFFIXES
                     and (prefix or path.name != ".gitkeep")):
                 archive.write(path, prefix + path.relative_to(root).as_posix())

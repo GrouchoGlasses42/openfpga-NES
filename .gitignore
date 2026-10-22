@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 /release-notes/
+/docs/
 *.[zZ][iI][pP]
 *.7[zZ]
 *.[rR][aA][rR]
