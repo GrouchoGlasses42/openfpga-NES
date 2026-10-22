@@ -16,7 +16,7 @@ class VersionTests(unittest.TestCase):
     def test_date_stamp_preserves_base_and_synchronizes_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            core = root / "pkg/pocket/Cores/agg23.NES_experimental/core.json"
+            core = root / "pkg/pocket/Cores/groucho.NES_experimental/core.json"
             core.parent.mkdir(parents=True)
             core.write_text(json.dumps({"core": {"metadata": {
                 "shortname": "NES_experimental", "version": "1.0.1+20261021",
@@ -36,7 +36,7 @@ class VersionTests(unittest.TestCase):
     def test_invalid_base_does_not_write_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            core = root / "pkg/pocket/Cores/agg23.NES_experimental/core.json"
+            core = root / "pkg/pocket/Cores/groucho.NES_experimental/core.json"
             core.parent.mkdir(parents=True)
             core.write_text(json.dumps({"core": {"metadata": {"version": "invalid"}}}))
             gateware = root / "gateware.json"

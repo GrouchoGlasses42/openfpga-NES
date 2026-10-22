@@ -12,7 +12,7 @@ body:
     attributes:
       value: |
         Please note that the issue tracker is intended for bug reports.
-        Make sure to [search for existing issues](https://github.com/agg23/openfpga-NES/issues) before filing a new one!
+        Make sure to [search for existing issues](https://github.com/GrouchoGlasses42/openfpga-NES/issues) before filing a new one!
 
   - type: textarea
     id: question

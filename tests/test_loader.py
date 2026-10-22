@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class VM:
     def __init__(self, slots):
         self.memory = bytearray(8192)
-        code = (ROOT / "pkg/pocket/Cores/agg23.NES_experimental/loader.bin").read_bytes()
+        code = (ROOT / "pkg/pocket/Cores/groucho.NES_experimental/loader.bin").read_bytes()
         self.memory[:len(code)] = code
         self.reg = [0] * 16
         self.pc = 2

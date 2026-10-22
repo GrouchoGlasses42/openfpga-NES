@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def stamp_version(root, build_date):
-    core_path = root / "pkg/pocket/Cores/agg23.NES_experimental/core.json"
+    core_path = root / "pkg/pocket/Cores/groucho.NES_experimental/core.json"
     gateware_path = root / "gateware.json"
     core = json.loads(core_path.read_text())
     gateware = json.loads(gateware_path.read_text())

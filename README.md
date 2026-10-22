@@ -91,7 +91,7 @@ Test programs are available from the external projects in the accuracy section.
 8. Start **NES_experimental** from the **openFPGA** menu.
 9. Select a game from the **Cartridge** browser.
 
-The core directory is `Cores/agg23.NES_experimental`.
+The core directory is `Cores/groucho.NES_experimental`.
 The BIOS file name and file size must be exact.
 
 ### File formats and locations

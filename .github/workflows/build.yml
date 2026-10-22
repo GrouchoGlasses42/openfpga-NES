@@ -86,6 +86,6 @@ jobs:
       - name: Save installable core
         uses: actions/upload-artifact@v4
         with:
-          name: agg23.NES_experimental
-          path: release/agg23.NES_experimental_*.zip
+          name: groucho.NES_experimental
+          path: release/groucho.NES_experimental_*.zip
           if-no-files-found: error

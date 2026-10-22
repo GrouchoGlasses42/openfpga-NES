@@ -2,7 +2,7 @@
     "name": "NES_experimental",
     "displayName": "NES_experimental",
     "description": "NES/FDS with MiSTer mappers, composite blend and save states",
-    "author": "agg23",
+    "author": "groucho",
     "version": "1.0.1+20261022",
     "license": "GPL-3.0-or-later",
     "repository": "https://github.com/GrouchoGlasses42/openfpga-NES",
