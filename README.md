@@ -473,7 +473,6 @@ Physical tests remain necessary for game saves, Memories, sleep, and the complet
 | [100thCoin](https://github.com/100thCoin/AccuracyCoin) | AccuracyCoin |
 | Sour | FDS IRQ tests |
 | [TakuikaNinja](https://github.com/TakuikaNinja), SCSR, and paulb-nl | FDS diagnostics, hardware research, and refresh watchdog analysis |
-| spiritualized1997 | Core icon |
 | Kitrinx, FirebrandX, and NakedArthur | Color palettes |
 | Analogue and [openFPGA contributors](https://github.com/open-fpga) | Pocket platform and Chip32 tools |
 
