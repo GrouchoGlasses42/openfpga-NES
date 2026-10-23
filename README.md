@@ -134,6 +134,9 @@ Its default value is `0`, which sets turbo to Off.
 With **Hide Overscan** off, the core sends all 240 picture lines to the scaler.
 With **Hide Overscan** on, the core removes eight lines from the top and eight lines from the bottom.
 The remaining picture has 224 lines.
+
+The available Analogue display filters are **CRT Trinitron** and **PC Engine LT**.
+
 **Extra Sprites** increases the sprite limit and can change game behavior.
 
 **Composite Blend** has these modes:
