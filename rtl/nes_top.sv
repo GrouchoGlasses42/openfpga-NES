@@ -910,8 +910,10 @@ module nes_top (
       .color(color),
       .count_v(scanline),
       .count_h(cycle),
-      .hide_overscan(hide_overscan),
-      .palette(selected_palette),
+      // MiSTer mode 0 is 224 rows (8..231); mode 1 is 240 rows (0..239).
+      // Pocket's checkbox is true for the cropped, 224-row scaler mode.
+      .hide_overscan(hide_overscan ? 2'b00 : 2'b01),
+      .palette({1'b0, selected_palette}),
       .load_color(pal_write),
       .load_color_data(pal_color),
       .load_color_index(pal_index),
@@ -919,6 +921,14 @@ module nes_top (
       // Zapper
       .reticle(lightgun_enabled ? reticle : 2'b00),
       .pal_video(pal_video),
+      .sys_type(sys_type),
+      .vs_ppu_type(4'd0),
+      // Generate timing here from the live/paused dot counters. These optional
+      // PPU timing inputs are unused on Pocket and must not float.
+      .nes_hblank(1'b0),
+      .nes_hsync(1'b0),
+      .nes_vsync(1'b0),
+      .nes_vblank(1'b0),
 
       // .ce_pix(ce_pix),
       .HSync(HSync),

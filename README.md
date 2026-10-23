@@ -130,6 +130,10 @@ Its default value is `0`, which sets turbo to Off.
 
 **Core Settings** contains the video controls.
 **Hide Overscan**, **Edge Masking**, and **Square Pixels** control the visible picture.
+
+With **Hide Overscan** off, the core sends all 240 picture lines to the scaler.
+With **Hide Overscan** on, the core removes eight lines from the top and eight lines from the bottom.
+The remaining picture has 224 lines.
 **Extra Sprites** increases the sprite limit and can change game behavior.
 
 **Composite Blend** has these modes:
@@ -427,6 +431,19 @@ They do not require game ROMs, test ROMs, or a BIOS dump.
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
+
+The video geometry test uses Verilator and Python 3.
+It checks the production scanline generator, composite filters, and Pocket scaler settings together.
+
+1. Run the video geometry test.
+
+```sh
+bash tools/run_video_geometry_test.sh . /tmp/nes-video-geometry
+```
+
+The test checks all 36 combinations of blend mode, overscan setting, and pixel aspect ratio.
+It checks the line width, picture height, crop position, and scaler mode.
+It uses generated pixel data and does not require a ROM.
 
 The FDS bus tests use Verilator.
 They do not require an FDS disk image or BIOS dump.

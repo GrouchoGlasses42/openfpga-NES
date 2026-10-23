@@ -19,6 +19,12 @@ jobs:
           python-version: '3.12'
       - name: Run loader, version, and package tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Install video simulator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+      - name: Check video geometry and scaler modes
+        run: bash tools/run_video_geometry_test.sh . "$RUNNER_TEMP/video-geometry"
 
   synthesis:
     if: github.event_name == 'workflow_dispatch'

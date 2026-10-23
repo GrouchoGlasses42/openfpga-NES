@@ -9,8 +9,8 @@
       "description": "NES/FDS with MiSTer mappers, composite blend and save states",
       "author": "groucho",
       "url": "https://github.com/GrouchoGlasses42/openfpga-NES",
-      "version": "1.0.1+20261022",
-      "date_release": "2026-10-22"
+      "version": "1.0.1+20261023",
+      "date_release": "2026-10-23"
     },
     "framework": {
       "target_product": "Analogue Pocket",
