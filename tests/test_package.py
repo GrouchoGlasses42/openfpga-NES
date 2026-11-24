@@ -20,6 +20,13 @@ class PackageTests(unittest.TestCase):
         self.assertLessEqual({"Eject / Change Disk", "Disk Swap", "Fast Disk Access"},
                              {v["name"] for v in menu})
 
+    def test_library_can_read_data_slots_and_icon(self):
+        # openFPGA Library rejects slots that omit any of these fields.
+        core, = (Path(__file__).resolve().parents[1] / "pkg/pocket/Cores").iterdir()
+        for slot in json.loads((core / "data.json").read_text())["data"]["data_slots"]:
+            self.assertLessEqual({"name", "required", "parameters"}, set(slot), slot["name"])
+        self.assertEqual((core / "icon.bin").stat().st_size, 36 * 36 * 2)
+
     def test_rejects_menu_entries_that_pocket_would_drop(self):
         entry = {"name": "Setting", "type": "check"}
         package.validate_menu([entry] * 16)

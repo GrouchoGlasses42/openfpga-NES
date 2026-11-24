@@ -166,7 +166,6 @@ def main():
                 raise ValueError("Bitstream conversion did not round-trip")
         checked_metadata = validate_core_definition(core)
         version = checked_metadata["version"]
-        date = checked_metadata["date_release"]
         menu = json.loads((core / "interact.json").read_text())["interact"]["variables"]
         validate_menu(menu)
         ids = [v["id"] for v in menu]
@@ -183,10 +182,9 @@ def main():
                     and path.suffix.lower() not in PRIVATE_ASSET_SUFFIXES):
                 if path.suffix == ".json": json.loads(path.read_text())
                 hashes[path.relative_to(stage).as_posix()] = digest(path)
-        label = version if version.endswith("+" + date.replace("-", "")) else f"{version}_{date}"
-        package = args.output / f"{core_id}_{label}.zip"
+        package = args.output / f"{core_id}_{version}.zip"
         archive_tree(stage, package)
-    source_package = args.output / f"pocket-nes-source_{label}.zip"
+    source_package = args.output / f"pocket-nes-source_{version}.zip"
     archive_tree(args.source, source_package, "pocket-nes/")
     manifest = {"package": package.name, "package_sha256": digest(package),
                 "source_package": source_package.name, "source_package_sha256": digest(source_package),

@@ -65,8 +65,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Set package build date
-        run: python3 tools/stamp_version.py
       - uses: actions/download-artifact@v4
         with:
           pattern: image-*
@@ -92,6 +90,6 @@ jobs:
       - name: Save installable core
         uses: actions/upload-artifact@v4
         with:
-          name: groucho.NES_experimental
-          path: release/groucho.NES_experimental_*.zip
+          name: groucho.NES
+          path: release/groucho.NES_*.zip
           if-no-files-found: error

@@ -5,11 +5,11 @@
       "platform_ids": [
         "nes"
       ],
-      "shortname": "NES_experimental",
+      "shortname": "NES",
       "description": "NES/FDS with MiSTer mappers, composite blend and save states",
       "author": "groucho",
       "url": "https://github.com/GrouchoGlasses42/openfpga-NES",
-      "version": "1.0.1+20261124",
+      "version": "1.1.0",
       "date_release": "2026-11-24"
     },
     "framework": {

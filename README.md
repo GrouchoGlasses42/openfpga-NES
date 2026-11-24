@@ -1,15 +1,14 @@
-# NES_experimental for Analogue Pocket
+# NES for Analogue Pocket
 
-NES_experimental is an openFPGA core for the Analogue Pocket.
+groucho.NES is an openFPGA core for the Analogue Pocket.
 It runs Nintendo Entertainment System (NES) and Famicom cartridge images.
 It also runs Famicom Disk System (FDS) disk images.
 
 The core uses the NES hardware design from MiSTer and the Pocket port from agg23.
 This project is an independent derivative of those projects.
 
-The version format is `UPSTREAM_VERSION+YYYYMMDD`.
-The suffix gives the package build date in UTC.
-The base version follows the latest published [agg23 release](https://github.com/agg23/openfpga-NES/releases/latest).
+The version format is `MAJOR.MINOR.PATCH`.
+Version numbers are independent of agg23's releases.
 
 ## Features
 
@@ -32,7 +31,7 @@ The core does not play NSF files.
 ### Additional mappers
 
 The comparison uses the mapper selection in [agg23's published core](https://github.com/agg23/openfpga-NES/blob/1.0.1/rtl/cart.sv).
-NES_experimental adds these 15 mapper IDs to that release.
+groucho.NES adds these 15 mapper IDs to that release.
 The examples identify software for each mapper.
 They are not a complete game compatibility test result.
 
@@ -61,7 +60,7 @@ Complete Vs. System compatibility also depends on the arcade hardware functions.
 
 ### Expansion audio
 
-NES_experimental also adds VRC7 FM audio for **Lagrange Point**.
+groucho.NES also adds VRC7 FM audio for **Lagrange Point**.
 [agg23's core already has mapper 85](https://github.com/agg23/openfpga-NES/blob/1.0.1/README.md#expansion-audio), but its VRC7 FM audio is disabled.
 VRC7 audio is an addition to existing mapper support.
 It is not an additional mapper ID.
@@ -72,7 +71,7 @@ It is not an additional mapper ID.
 
 - An Analogue Pocket with openFPGA firmware.
 - A microSD card with an openFPGA directory structure.
-- The complete NES_experimental release ZIP from this repository's **Releases** page.
+- The complete `groucho.NES` release ZIP from this repository's **Releases** page.
 - A game image in a format from the table below.
 - An 8192-byte FDS BIOS file for FDS games.
 
@@ -88,11 +87,23 @@ Test programs are available from the external projects in the accuracy section.
 5. For FDS games, put the BIOS file in `Assets/nes/common`.
 6. Name the BIOS file `fds.bios`.
 7. Insert the microSD card into the Pocket.
-8. Start **NES_experimental** from the **openFPGA** menu.
+8. Start **NES** by **groucho** from the **openFPGA** menu.
 9. Select a game from the **Cartridge** browser.
 
-The core directory is `Cores/groucho.NES_experimental`.
+The core directory is `Cores/groucho.NES`.
 The BIOS file name and file size must be exact.
+
+### Update from NES_experimental
+
+Versions before 1.1.0 used the name **NES_experimental**.
+
+1. Install the new package.
+2. If you use a custom palette, copy `custom.pal` from `Assets/nes/groucho.NES_experimental/palettes` to `Assets/nes/groucho.NES/palettes`.
+3. Remove `Cores/groucho.NES_experimental`.
+
+Game images, `fds.bios`, and game saves stay in the same directories.
+Pocket OS associates Memories and core settings with the core ID.
+Thus the new core does not show Memories or settings from **NES_experimental**.
 
 ### File formats and locations
 
@@ -399,14 +410,7 @@ The second command writes `chip32/loader.asm`.
 The repository also contains the assembled `loader.bin`.
 A change to the loader source requires assembly before the loader tests.
 
-The package build date is separate from the FPGA compilation date.
-The version tool retains the upstream base version in `core.json`.
-
-1. Set the package build date before a release.
-
-```sh
-python3 tools/stamp_version.py
-```
+Before a release, set the version in `core.json` and `gateware.json`, and the release date in `core.json`.
 
 ### Compile an FPGA image
 
@@ -503,6 +507,7 @@ Physical tests remain necessary for game saves, Memories, sleep, and the complet
 | [Adam Gastineau, agg23](https://github.com/agg23/openfpga-NES) | Analogue Pocket port and core integration |
 | [OpenGateware contributors](https://github.com/opengateware) | Pocket platform components |
 | [snckrz](https://github.com/snckrz/openfpga-NES-Analogizer) and Kitrinx | Composite blend filters |
+| [Analogue](https://github.com/open-fpga/core-template) | Core author icon |
 | Kitrinx and Loopy | FDS audio implementation and hardware research |
 | [T65 contributors](https://github.com/GrouchoGlasses42/openfpga-NES/blob/main/rtl/upstream/t65/T65.vhd) | CPU design, including work by Daniel Wallner, Mike Johnson, Wolfgang Scherr, and Morten Leikvoll |
 | [100thCoin](https://github.com/100thCoin/AccuracyCoin) | AccuracyCoin |
