@@ -120,6 +120,29 @@ wire disk_ready = (~disk_eject & ~diskreset & motor_on & ~diskend);
 wire [7:0] disk_data = write_disk ? prg_din : prg_dbus;
 wire disk_irq = (byte_transfer_flag & disk_irq_en);
 
+// Automatic disk-side lookup. The patched BIOS disk-ID check steps through the
+// 10-byte ID that the game requests (see BIOS_PATCHES):
+//   write $40B0+Y        requested ID byte Y; Y=9 starts a new lookup
+//   read  $40C0+16*N+Y   ID byte Y from the header of side N, compared here
+//   write $40BF          insert the first side that matches every byte
+// As in the BIOS check, a requested $FF matches any value. Side bytes alone are
+// not enough: the disks of a two-disk game can differ only in the game name.
+reg id_active;
+reg [7:0] id_request;
+reg [3:0] id_match;
+wire id_window = (prg_ain[15:6] == 10'b0100_0000_11); // $40C0-$40FF
+wire id_read = ~prg_write & id_window & id_active;
+wire id_request_wr = (prg_ain[15:4] == 12'h40B) & (prg_ain[3:0] <= 4'd9);
+wire id_commit_wr = (prg_ain == 16'h40BF);
+wire [3:0] sides_present = {(max_diskside == 2'd3), max_diskside[1], (max_diskside != 2'd0), 1'b1};
+reg [17:0] id_offset;
+always @* case (prg_ain[5:4]) // sideoffset + 15
+	0: id_offset = 18'h0001F;
+	1: id_offset = 18'h0FFFB;
+	2: id_offset = 18'h1FFD7;
+	3: id_offset = 18'h2FFB3;
+endcase
+
 // The FDS transfer rate is around 96.4kHz which is 10.37 microseconds per bit.
 // The gap at the start of the disk is typically 28300 bits long and gaps between blocks 976 bits.
 // A byte takes 82.99 microseconds which is around 149 CPU cycles.
@@ -136,6 +159,9 @@ wire [19:0] byte_delay = fds_fast ? BYTE_DELAY_FAST : BYTE_DELAY_ORIG;
 always@(posedge clk) begin
 	if(~enable) begin
 		diskside <= 0;
+		id_active <= 0;
+		id_request <= 0;
+		id_match <= 0;
 		timer_irq_en <= 0;
 		timer_irq <= 0;
 		refresh_timer <= 12'd4095;
@@ -196,12 +222,15 @@ always@(posedge clk) begin
 		read_disk_d        <= SS_MAP2[   56];
 		write_disk_d       <= SS_MAP2[   57];
 		old_eject_btn      <= SS_MAP2[   58];
+		id_match           <= SS_MAP2[62:59];
+		id_active          <= SS_MAP2[   63];
 		diskpos            <= SS_MAP3[15: 0];
 		file_size          <= SS_MAP3[31:16];
 		refresh_timer      <= SS_MAP3[43:32];
 		refresh_row        <= SS_MAP3[50:44];
 		refresh_irq_en     <= SS_MAP3[   51];
 		refresh_irq        <= SS_MAP3[   52];
+		id_request         <= SS_MAP3[60:53];
 	end else begin
 
 		if (ce) begin
@@ -298,12 +327,29 @@ always@(posedge clk) begin
 							end
 						end
 					end
-
-					16'h4027:   //powerpak extra: disk side
-						if (fds_auto_eject_en)
-							diskside <= prg_din[1:0];
 				endcase
+
+				if (id_request_wr) begin
+					id_request <= prg_din;
+					if (prg_ain[3:0] == 4'd9) begin
+						id_active <= 1;
+						id_match <= sides_present;
+					end
+				end
+
+				if (id_commit_wr & id_active) begin
+					id_active <= 0;
+					if (fds_auto_eject_en) begin
+						if (id_match[0])      diskside <= 2'd0;
+						else if (id_match[1]) diskside <= 2'd1;
+						else if (id_match[2]) diskside <= 2'd2;
+						else if (id_match[3]) diskside <= 2'd3;
+					end
+				end
 			end
+
+			if (prg_read & id_read & (id_request != 8'hFF) & (prg_dbus != id_request))
+				id_match[prg_ain[5:4]] <= 0;
 
 			got_start_byte_d <= got_start_byte;
 
@@ -459,7 +505,8 @@ assign SS_MAP2_BACK[   55] = read_4030;
 assign SS_MAP2_BACK[   56] = read_disk_d;
 assign SS_MAP2_BACK[   57] = write_disk_d;
 assign SS_MAP2_BACK[   58] = old_eject_btn;
-assign SS_MAP2_BACK[63:59] = 0;
+assign SS_MAP2_BACK[62:59] = id_match;
+assign SS_MAP2_BACK[   63] = id_active;
 
 assign SS_MAP3_BACK[15: 0] = diskpos;
 assign SS_MAP3_BACK[31:16] = file_size;
@@ -467,7 +514,8 @@ assign SS_MAP3_BACK[43:32] = refresh_timer;
 assign SS_MAP3_BACK[50:44] = refresh_row;
 assign SS_MAP3_BACK[   51] = refresh_irq_en;
 assign SS_MAP3_BACK[   52] = refresh_irq;
-assign SS_MAP3_BACK[63:53] = 0;
+assign SS_MAP3_BACK[60:53] = id_request;
+assign SS_MAP3_BACK[63:61] = 0;
 
 
 // Loopy's patched bios use a trick to catch requested diskside for games
@@ -488,7 +536,7 @@ assign romoffset=diskpos + sideoffset;
 
 
 // BIOS patches
-localparam BIOS_PATCHES_CNT = 33;
+localparam BIOS_PATCHES_CNT = 49;
 wire [23:0] BIOS_PATCHES[BIOS_PATCHES_CNT] = '{
 	// Wait for button press before loading disk
 	'hEEE2_09,                       // Don't branch here otherwise no music
@@ -503,14 +551,20 @@ wire [23:0] BIOS_PATCHES[BIOS_PATCHES_CNT] = '{
 	'hF4D3_85, 'hF4D4_F4,            // STA $F4
 	'hF4D5_60,                       // RTS
 
-	// Store diskside to $4027
+	// Find the side with the requested disk ID
 	'hE445_20, 'hE446_D6, 'hE447_F4, // JSR $F4D6
 
-	'hF4D6_A0, 'hF4D7_06,            // LDY #$06
+	'hF4D6_A0, 'hF4D7_09,            // LDY #$09
 	'hF4D8_B1, 'hF4D9_00,            // LDA ($00),Y
-	'hF4DA_30, 'hF4DB_03,            // BMI $F4DF
-	'hF4DC_8D, 'hF4DD_27, 'hF4DE_40, // STA $4027
-	'hF4DF_4C, 'hF4E0_E3, 'hF4E1_E6  // JMP $E6E3 (StartXfer)
+	'hF4DA_99, 'hF4DB_B0, 'hF4DC_40, // STA $40B0,Y
+	'hF4DD_B9, 'hF4DE_C0, 'hF4DF_40, // LDA $40C0,Y
+	'hF4E0_B9, 'hF4E1_D0, 'hF4E2_40, // LDA $40D0,Y
+	'hF4E3_B9, 'hF4E4_E0, 'hF4E5_40, // LDA $40E0,Y
+	'hF4E6_B9, 'hF4E7_F0, 'hF4E8_40, // LDA $40F0,Y
+	'hF4E9_88,                       // DEY
+	'hF4EA_10, 'hF4EB_EC,            // BPL $F4D8
+	'hF4EC_8D, 'hF4ED_BF, 'hF4EE_40, // STA $40BF
+	'hF4EF_4C, 'hF4F0_E3, 'hF4F1_E6  // JMP $E6E3 (StartXfer)
 };
 
 localparam BIOS_PATCHES2_CNT = 18;
@@ -589,8 +643,9 @@ assign prg_addr = prg_is_ram ? { 7'b10_0000_1, prg_ain[14:0] } : { 9'd0, prg_ain
 //PRG 000000-001FFF = bios
 //PRG 208000-20FFFF = wram
 //PRG 3C0000-3FFFFF = disk image
-assign prg_aout = (prg_disk_rd_reg | prg_disk_wr_reg) ? { 4'b111_1,romoffset } : prg_addr;
-assign prg_allow = ((prg_ain[15] | prg_disk_rd_reg) & ~prg_write & ~bios_patch_found) | (prg_is_ram | write_disk);
+assign prg_aout = id_read ? { 4'b111_1, id_offset + prg_ain[3:0] } :
+                  (prg_disk_rd_reg | prg_disk_wr_reg) ? { 4'b111_1,romoffset } : prg_addr;
+assign prg_allow = ((prg_ain[15] | prg_disk_rd_reg | id_read) & ~prg_write & ~bios_patch_found) | (prg_is_ram | write_disk);
 
 assign chr_allow = 1;
 assign chr_aout = { 9'b10_0000_000, chr_ain[12:0] };

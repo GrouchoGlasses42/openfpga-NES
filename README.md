@@ -107,6 +107,9 @@ All paths in this table start at the microSD card root.
 
 Each FDS side contains 65,500 bytes.
 The loader accepts one to four sides.
+For a game on two disks, put the sides of both disks in one file, in disk order.
+If the files have FDS headers, remove the header from the second file before you join them.
+The core calculates the number of sides from the file size, not from the header.
 The loader does not accept cartridge images without headers or cartridge images with trainers.
 
 ## Controls and settings
@@ -163,10 +166,16 @@ They do not generate a composite video signal.
 
 | Setting | Function |
 |---|---|
-| Automatic | The core changes disk sides when the game requests a disk change. |
+| Automatic | The core inserts the side that has the disk ID that the game requests. |
 | Manual | **Eject / Change Disk** controls disk changes. |
 
+Automatic mode compares the complete disk ID, not only the side letter.
+Thus it can also select the sides of the second disk in a four-side image.
+If two or more sides have the same disk ID, the core uses the first of these sides.
+If no side has the requested disk ID, the core does not change the side.
 Some games require manual disk changes.
+In Manual mode, each disk change inserts the next side in the image.
+The left trigger has the same function as **Eject / Change Disk**.
 **Fast Disk Access** decreases disk transfer delays.
 Its default setting is Off.
 
@@ -473,6 +482,12 @@ bash tools/run_fds_audio_reset_test.sh . /tmp/nes-fds-audio
 
 ```sh
 bash tools/run_fds_state_test.sh
+```
+
+5. Run the FDS automatic disk change test.
+
+```sh
+bash tools/run_fds_side_lookup_test.sh . /tmp/nes-fds-side-lookup
 ```
 
 HDL simulation does not test Pocket OS or the physical Pocket hardware.
