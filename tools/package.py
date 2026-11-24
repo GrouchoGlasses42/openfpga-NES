@@ -51,6 +51,23 @@ def validate_core_definition(folder):
     return metadata
 
 
+def validate_menu(variables):
+    """Pocket silently drops interact.json entries after the first 16."""
+    errors = []
+    if len(variables) > 16:
+        hidden = ", ".join(repr(v["name"]) for v in variables[16:])
+        errors.append(f"menu has {len(variables)} entries; Pocket shows 16 and drops {hidden}")
+    for variable in variables:
+        options = variable.get("options", [])
+        for name in [variable["name"], *(o["name"] for o in options)]:
+            if not 1 <= len(name) <= 23:
+                errors.append(f"menu name {name!r} must contain 1 to 23 characters")
+        if len(options) > 16:
+            errors.append(f"menu list {variable['name']!r} must contain at most 16 options")
+    if errors:
+        raise ValueError("; ".join(errors))
+
+
 def validate(folder, name):
     log = (folder / "build.log").read_text()
     if "Quartus Prime Full Compilation was successful. 0 errors" not in log:
@@ -151,6 +168,7 @@ def main():
         version = checked_metadata["version"]
         date = checked_metadata["date_release"]
         menu = json.loads((core / "interact.json").read_text())["interact"]["variables"]
+        validate_menu(menu)
         ids = [v["id"] for v in menu]
         addresses = [int(v["address"], 0) for v in menu if "address" in v]
         if len(ids) != len(set(ids)) or len(addresses) != len(set(addresses)):

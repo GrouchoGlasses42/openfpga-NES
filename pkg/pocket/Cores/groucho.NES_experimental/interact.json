@@ -22,12 +22,6 @@
         "value": 1
       },
       {
-        "name": "Video Options",
-        "id": 39,
-        "type": "action",
-        "enabled": false
-      },
-      {
         "name": "Hide Overscan",
         "id": 40,
         "type": "check",
@@ -173,12 +167,6 @@
         ]
       },
       {
-        "name": "Controller Options",
-        "id": 90,
-        "type": "action",
-        "enabled": false
-      },
-      {
         "name": "Turbo Speed",
         "id": 91,
         "type": "slider_u32",
@@ -207,12 +195,6 @@
         "value": 1
       },
       {
-        "name": "Lightgun Options",
-        "id": 80,
-        "type": "action",
-        "enabled": false
-      },
-      {
         "name": "Use Zapper",
         "id": 81,
         "type": "check",
@@ -239,12 +221,6 @@
           "adjust_small": 1,
           "adjust_large": 4
         }
-      },
-      {
-        "name": "FDS Options",
-        "id": 100,
-        "type": "action",
-        "enabled": false
       },
       {
         "name": "Eject / Change Disk",
